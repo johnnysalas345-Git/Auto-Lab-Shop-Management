@@ -238,4 +238,163 @@ function WorkOrderDetail({ wo, woData, customer, vehicle, statusStyle, onBack })
           <div style={styles.cardTitle}>Work Items</div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom:
+              <tr style={{ borderBottom: "2px solid #E0E0E0" }}>
+                <th style={{ textAlign: "left", padding: 8, fontSize: 12, color: "#666", fontWeight: "600" }}>Description</th>
+                <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#666", fontWeight: "600" }}>Hours</th>
+                <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#666", fontWeight: "600" }}>Rate</th>
+                <th style={{ textAlign: "right", padding: 8, fontSize: 12, color: "#666", fontWeight: "600" }}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(woData.labor || {}).map(([id, labor]) => (
+                <tr key={id} style={{ borderBottom: "1px solid #F0F0F0" }}>
+                  <td style={{ padding: 8, fontSize: 13, color: "#333" }}>🔧 {labor.desc}</td>
+                  <td style={{ padding: 8, fontSize: 13, color: "#333", textAlign: "right" }}>{labor.hours}</td>
+                  <td style={{ padding: 8, fontSize: 13, color: "#333", textAlign: "right" }}>${labor.rate.toFixed(2)}</td>
+                  <td style={{ padding: 8, fontSize: 13, color: "#1565C0", textAlign: "right", fontWeight: "600" }}>
+                    ${(labor.hours * labor.rate).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Notes</div>
+          {notes.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              {notes.map((note, i) => (
+                <div key={i} style={{ background: "#F5F5F5", borderRadius: 8, padding: 12, marginBottom: 8, borderLeft: "4px solid #1565C0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: "600", color: "#333" }}>{note.author}</span>
+                    <span style={{ fontSize: 11, color: "#999" }}>{note.ts}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: "#555" }}>{note.text}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder="Add a note..."
+              style={{
+                flex: 1,
+                background: "#F9F9F9",
+                border: "1px solid #DDD",
+                borderRadius: 6,
+                padding: "10px 12px",
+                color: "#333",
+                fontSize: 13,
+              }}
+            />
+            <button
+              onClick={handleAddNote}
+              style={{
+                background: "#1565C0",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                padding: "10px 16px",
+                fontWeight: "600",
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Signature</div>
+          {signature ? (
+            <div style={{ background: "#E8F5E9", borderRadius: 8, padding: 12, borderLeft: "4px solid #2E7D32" }}>
+              <div style={{ color: "#2E7D32", fontWeight: "600", marginBottom: 4 }}>✓ Signed</div>
+              <div style={{ fontSize: 13, color: "#333", marginBottom: 2 }}>{signature.customerName}</div>
+              <div style={{ fontSize: 12, color: "#666" }}>{signature.date} at {signature.time}</div>
+            </div>
+          ) : (
+            <>
+              {showSignatureForm ? (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    value={signatureName}
+                    onChange={(e) => setSignatureName(e.target.value)}
+                    placeholder="Customer name..."
+                    autoFocus
+                    style={{
+                      flex: 1,
+                      background: "#F9F9F9",
+                      border: "1px solid #DDD",
+                      borderRadius: 6,
+                      padding: "10px 12px",
+                      color: "#333",
+                      fontSize: 13,
+                    }}
+                  />
+                  <button
+                    onClick={handleCaptureSignature}
+                    style={{
+                      background: "#2E7D32",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "10px 16px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSignatureForm(true)}
+                  style={{
+                    background: "#E3F2FD",
+                    color: "#1565C0",
+                    border: "1px solid #90CAF9",
+                    borderRadius: 6,
+                    padding: "12px 16px",
+                    fontWeight: "600",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Capture Signature
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  app: { background: "#F5F5F5", color: "#333", minHeight: "100vh", fontFamily: "'Inter', sans-serif" },
+  header: { background: "white", borderBottom: "1px solid #E0E0E0", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" },
+  brandName: { fontSize: 18, fontWeight: "700", color: "#1565C0" },
+  brandSub: { fontSize: 12, color: "#999" },
+  body: { padding: "24px", maxWidth: "1200px", margin: "0 auto" },
+  backBtn: { background: "#1565C0", color: "white", border: "none", borderRadius: 6, padding: "10px 16px", fontWeight: "600", fontSize: 13, cursor: "pointer" },
+  sectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: "700", color: "#333" },
+  badge: { fontSize: 12, color: "#666", background: "#E8EEF7", padding: "6px 12px", borderRadius: 4 },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 },
+  card: { background: "white", border: "1px solid #E0E0E0", borderRadius: 8, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" },
+  cardTitle: { fontSize: 13, fontWeight: "700", color: "#666", textTransform: "uppercase", marginBottom: 12, letterSpacing: 0.5 },
+  woId: { fontSize: 16, fontWeight: "700", color: "#1565C0" },
+  woCustomer: { fontSize: 14, color: "#333", marginTop: 4 },
+  statusBadge: { padding: "4px 8px", borderRadius: 4, fontSize: 11, fontWeight: "600" },
+  divider: { height: "1px", background: "#E0E0E0", margin: "12px 0" },
+  label: { fontSize: 11, color: "#999", fontWeight: "600", textTransform: "uppercase" },
+  value: { fontSize: 13, color: "#333", marginTop: 4, fontWeight: "500" },
+};
