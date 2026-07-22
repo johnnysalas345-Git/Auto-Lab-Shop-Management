@@ -88,3 +88,4 @@ export default function GarageDashboard() {
             <button style={{ ...styles.actionBtn, background: '#F57C00' }} title="Create estimate">
               <FileText size={20} />
               <span>New Estimate</span>
+              </button>
