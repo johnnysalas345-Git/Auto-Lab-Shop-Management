@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Users, FileText } from 'lucide-react';
+import { Wrench, Users, FileText, DollarSign, ChevronRight } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://gvsbbpuuoxluqaiovtvx.supabase.co';
@@ -7,12 +7,22 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Technician colors
+const TECH_COLORS = {
+  tech1: '#7C3AED', // Purple
+  tech2: '#6B7280', // Gray
+  tech3: '#10B981', // Green
+  tech4: '#EF4444', // Red
+};
+
 export default function GarageDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [workOrders, setWorkOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedWO, setSelectedWO] = useState(null);
+  const isAdmin = true; // TODO: Check user role from auth
 
   useEffect(() => {
     loadData();
@@ -33,58 +43,77 @@ export default function GarageDashboard() {
     }
   }
 
-  const getWorkOrdersForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
+  const getTodayJobs = () => {
+    const today = new Date().toISOString().split('T')[0];
     return workOrders.filter(wo => {
       const woData = wo.data || wo;
-      return woData.opened_at === dateStr;
+      return woData.opened_at === today;
     });
   };
 
-  const monthWOs = workOrders.filter(wo => {
-    const woData = wo.data || wo;
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    return woData.opened_at?.startsWith(currentMonth);
-  });
+  const groupJobsByTech = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayJobs = workOrders.filter(wo => {
+      const woData = wo.data || wo;
+      return woData.opened_at === today;
+    });
 
-  const activeWOs = workOrders.filter(wo => {
-    const woData = wo.data || wo;
-    return ['open', 'in_progress', 'waiting_parts'].includes(woData.status);
-  });
+    const grouped = {
+      unassigned: [],
+      tech1: [],
+      tech2: [],
+      tech3: [],
+      tech4: [],
+    };
 
-  const totalRevenue = monthWOs.reduce((sum, wo) => {
+    todayJobs.forEach(wo => {
+      const woData = wo.data || wo;
+      const techId = woData.labor ? Object.values(woData.labor)[0]?.technician_id : null;
+      
+      if (techId && grouped[techId]) {
+        grouped[techId].push(wo);
+      } else {
+        grouped.unassigned.push(wo);
+      }
+    });
+
+    return grouped;
+  };
+
+  const getActiveWorkOrders = () => {
+    let filtered = workOrders.filter(wo => {
+      const woData = wo.data || wo;
+      return ['open', 'in_progress', 'waiting_parts'].includes(woData.status);
+    });
+
+    if (activeFilter !== 'all') {
+      filtered = filtered.filter(wo => {
+        const woData = wo.data || wo;
+        return woData.status === activeFilter;
+      });
+    }
+
+    return filtered;
+  };
+
+  const getJobInfo = (wo) => {
     const woData = wo.data || wo;
-    const labor = Object.values(woData.labor || {}).reduce((s, l) => s + (l.hours * l.rate), 0);
-    return sum + labor + 250;
-  }, 0);
+    const cust = customers.find(c => c.id === woData.customer_id);
+    const veh = vehicles.find(v => v.id === woData.vehicle_id);
+    return { woData, cust, veh };
+  };
 
   if (activeTab === 'dashboard') {
+    const jobsByTech = groupJobsByTech();
+    const activeWOs = getActiveWorkOrders();
+
     return (
       <div style={styles.app}>
-        <div style={styles.header}>
-          <div style={styles.logoSection}>
-            <Wrench size={28} color="#1565C0" />
-            <div>
-              <div style={styles.logoText}>Auto Lab</div>
-              <div style={styles.logoSub}>Shop Management</div>
-            </div>
-          </div>
-        </div>
-
-        <div style={styles.navbar}>
-          <button style={styles.navItemActive} onClick={() => setActiveTab('dashboard')}>DASHBOARD</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('jobs')}>JOBS & INVOICES</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('expenses')}>EXPENSES</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('hours')}>HOURS</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('payroll')}>PAYROLL</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('pension')}>PENSION</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('cash')}>CASH & BANK</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('import')}>IMPORT</button>
-          <button style={styles.navItem} onClick={() => setActiveTab('settings')}>SETTINGS</button>
-        </div>
+        <Header isAdmin={isAdmin} />
+        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
 
         <div style={styles.body}>
+          {/* Action Buttons */}
           <div style={styles.actionsSection}>
             <button style={{ ...styles.actionBtn, background: '#2E7D32' }}>
               <Users size={20} />
@@ -98,61 +127,142 @@ export default function GarageDashboard() {
               <FileText size={20} />
               <span>New Estimate</span>
             </button>
+            {isAdmin && (
+              <button style={{ ...styles.actionBtn, background: '#6B21A8' }} title="Finance Dashboard">
+                <DollarSign size={20} />
+                <span>Finance</span>
+              </button>
+            )}
           </div>
 
-          <div style={styles.metricsGrid}>
-            <div style={styles.metricCard}>
-              <div style={styles.metricLabel}>Active Jobs</div>
-              <div style={styles.metricValue}>{activeWOs.length}</div>
+          {/* Today's Schedule */}
+          <div style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>Today's Schedule</h2>
+              <button style={styles.calendarBtn}>📅 View Calendar</button>
             </div>
-            <div style={styles.metricCard}>
-              <div style={styles.metricLabel}>Month Revenue</div>
-              <div style={styles.metricValue}>${totalRevenue.toFixed(2)}</div>
-            </div>
-            <div style={styles.metricCard}>
-              <div style={styles.metricLabel}>Total Customers</div>
-              <div style={styles.metricValue}>{customers.length}</div>
-            </div>
-            <div style={styles.metricCard}>
-              <div style={styles.metricLabel}>Total Vehicles</div>
-              <div style={styles.metricValue}>{vehicles.length}</div>
+
+            <div style={styles.scheduleContainer}>
+              {/* Tech 1 */}
+              <TechSchedule 
+                techName="Technician 1" 
+                techId="tech1"
+                jobs={jobsByTech.tech1} 
+                color={TECH_COLORS.tech1}
+                customers={customers}
+                vehicles={vehicles}
+              />
+
+              {/* Tech 2 */}
+              <TechSchedule 
+                techName="Technician 2" 
+                techId="tech2"
+                jobs={jobsByTech.tech2} 
+                color={TECH_COLORS.tech2}
+                customers={customers}
+                vehicles={vehicles}
+              />
+
+              {/* Tech 3 */}
+              <TechSchedule 
+                techName="Technician 3" 
+                techId="tech3"
+                jobs={jobsByTech.tech3} 
+                color={TECH_COLORS.tech3}
+                customers={customers}
+                vehicles={vehicles}
+              />
+
+              {/* Tech 4 */}
+              <TechSchedule 
+                techName="Technician 4" 
+                techId="tech4"
+                jobs={jobsByTech.tech4} 
+                color={TECH_COLORS.tech4}
+                customers={customers}
+                vehicles={vehicles}
+              />
+
+              {/* Unassigned */}
+              <TechSchedule 
+                techName="Unassigned" 
+                techId="unassigned"
+                jobs={jobsByTech.unassigned} 
+                color="#D1D5DB"
+                customers={customers}
+                vehicles={vehicles}
+              />
             </div>
           </div>
 
-          <div style={styles.calendarSection}>
-            <div style={styles.calendarHeader}>
-              <h2>Schedule</h2>
-              <div style={styles.dateNav}>
-                <button onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() - 1)))} style={styles.navBtn}>←</button>
-                <span>{selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-                <button onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() + 1)))} style={styles.navBtn}>→</button>
+          {/* Active Work Orders */}
+          <div style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <h2 style={styles.sectionTitle}>Active Work Orders</h2>
+              <div style={styles.filterTabs}>
+                <button 
+                  style={{ ...styles.filterTab, ...(activeFilter === 'all' ? styles.filterTabActive : {}) }}
+                  onClick={() => setActiveFilter('all')}
+                >
+                  All
+                </button>
+                <button 
+                  style={{ ...styles.filterTab, ...(activeFilter === 'open' ? styles.filterTabActive : {}) }}
+                  onClick={() => setActiveFilter('open')}
+                >
+                  Open
+                </button>
+                <button 
+                  style={{ ...styles.filterTab, ...(activeFilter === 'in_progress' ? styles.filterTabActive : {}) }}
+                  onClick={() => setActiveFilter('in_progress')}
+                >
+                  In Progress
+                </button>
+                <button 
+                  style={{ ...styles.filterTab, ...(activeFilter === 'waiting_parts' ? styles.filterTabActive : {}) }}
+                  onClick={() => setActiveFilter('waiting_parts')}
+                >
+                  Waiting Parts
+                </button>
               </div>
             </div>
 
-            <div style={styles.calendarBody}>
-              <div style={styles.dayWorkOrders}>
-                <h3>Jobs Today</h3>
-                {getWorkOrdersForDate(selectedDate).length === 0 ? (
-                  <div style={styles.noJobs}>No work orders scheduled</div>
-                ) : (
-                  getWorkOrdersForDate(selectedDate).map(wo => {
-                    const woData = wo.data || wo;
-                    const cust = customers.find(c => c.id === woData.customer_id);
-                    const veh = vehicles.find(v => v.id === woData.vehicle_id);
-                    return (
-                      <div key={wo.id} style={styles.dayJobCard}>
-                        <div style={styles.jobWONum}>WO #{wo.id.replace('wo', '')}</div>
-                        <div style={styles.jobCustomer}>{cust?.data?.name || 'Unknown'}</div>
-                        <div style={styles.jobVehicle}>{veh?.data?.year} {veh?.data?.make} {veh?.data?.model}</div>
-                        <div style={styles.jobComplaint}>{woData.complaint}</div>
+            <div style={styles.woList}>
+              {activeWOs.length === 0 ? (
+                <div style={styles.emptyState}>No active work orders</div>
+              ) : (
+                activeWOs.map(wo => {
+                  const { woData, cust, veh } = getJobInfo(wo);
+                  return (
+                    <div key={wo.id} style={styles.woCard}>
+                      <div style={styles.woContent}>
+                        <div style={styles.woNumber}>WO #{wo.id.replace('wo', '')}</div>
+                        <div style={styles.woCustomer}>{cust?.data?.name}</div>
+                        <div style={styles.woVehicle}>
+                          {veh?.data?.year} {veh?.data?.make} {veh?.data?.model}
+                        </div>
+                        <div style={styles.woStatus}>{woData.status}</div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                      <ChevronRight size={20} color="#999" />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
 
-              <div style={styles.miniCalendar}>
-                <MiniCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate} workOrders={workOrders} />
+          {/* Sections C & D - Placeholder */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
+            <div style={{ ...styles.section, background: '#F0F0F0', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', color: '#999' }}>
+                <div style={{ fontSize: 16, fontWeight: '600' }}>Section C</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Coming soon...</div>
+              </div>
+            </div>
+            <div style={{ ...styles.section, background: '#F0F0F0', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', color: '#999' }}>
+                <div style={{ fontSize: 16, fontWeight: '600' }}>Section D</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Coming soon...</div>
               </div>
             </div>
           </div>
@@ -163,28 +273,8 @@ export default function GarageDashboard() {
 
   return (
     <div style={styles.app}>
-      <div style={styles.header}>
-        <div style={styles.logoSection}>
-          <Wrench size={28} color="#1565C0" />
-          <div>
-            <div style={styles.logoText}>Auto Lab</div>
-            <div style={styles.logoSub}>Shop Management</div>
-          </div>
-        </div>
-      </div>
-
-      <div style={styles.navbar}>
-        <button style={styles.navItem} onClick={() => setActiveTab('dashboard')}>DASHBOARD</button>
-        <button style={styles.navItemActive} onClick={() => setActiveTab('jobs')}>JOBS & INVOICES</button>
-        <button style={styles.navItem}>EXPENSES</button>
-        <button style={styles.navItem}>HOURS</button>
-        <button style={styles.navItem}>PAYROLL</button>
-        <button style={styles.navItem}>PENSION</button>
-        <button style={styles.navItem}>CASH & BANK</button>
-        <button style={styles.navItem}>IMPORT</button>
-        <button style={styles.navItem}>SETTINGS</button>
-      </div>
-
+      <Header isAdmin={isAdmin} />
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
       <div style={styles.body}>
         <div style={{ textAlign: 'center', padding: 60, color: '#666' }}>
           <h2>{activeTab.toUpperCase()} Section</h2>
@@ -195,53 +285,84 @@ export default function GarageDashboard() {
   );
 }
 
-function MiniCalendar({ selectedDate, setSelectedDate, workOrders }) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-  const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-
-  const days = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let i = 1; i <= daysInMonth; i++) days.push(i);
-
-  const hasWorkOrder = (day) => {
-    if (!day) return false;
-    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    const dateStr = date.toISOString().split('T')[0];
-    return workOrders.some(wo => {
-      const woData = wo.data || wo;
-      return woData.opened_at === dateStr;
-    });
-  };
-
+function Header({ isAdmin }) {
   return (
-    <div style={styles.miniCalendarContainer}>
-      <div style={styles.miniCalendarHeader}>
-        <button onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))} style={styles.monthNavBtn}>←</button>
-        <div>{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
-        <button onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))} style={styles.monthNavBtn}>→</button>
+    <div style={styles.header}>
+      <div style={styles.logoSection}>
+        <Wrench size={28} color="#1565C0" />
+        <div>
+          <div style={styles.logoText}>Auto Lab</div>
+          <div style={styles.logoSub}>Shop Management</div>
+        </div>
       </div>
-      <div style={styles.weekDays}>
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} style={styles.weekDay}>{day}</div>
-        ))}
+      {isAdmin && (
+        <div style={{ fontSize: 12, color: '#999', fontWeight: '600' }}>
+          Admin • Johnny
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Navigation({ activeTab, setActiveTab, isAdmin }) {
+  return (
+    <div style={styles.navbar}>
+      <button style={activeTab === 'dashboard' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('dashboard')}>
+        DASHBOARD
+      </button>
+      <button style={activeTab === 'jobs' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('jobs')}>
+        JOBS & INVOICES
+      </button>
+      <button style={activeTab === 'expenses' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('expenses')}>
+        EXPENSES
+      </button>
+      <button style={activeTab === 'hours' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('hours')}>
+        HOURS
+      </button>
+      <button style={activeTab === 'payroll' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('payroll')}>
+        PAYROLL
+      </button>
+      <button style={activeTab === 'pension' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('pension')}>
+        PENSION
+      </button>
+      <button style={activeTab === 'cash' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('cash')}>
+        CASH & BANK
+      </button>
+      <button style={activeTab === 'import' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('import')}>
+        IMPORT
+      </button>
+      <button style={activeTab === 'settings' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('settings')}>
+        SETTINGS
+      </button>
+    </div>
+  );
+}
+
+function TechSchedule({ techName, techId, jobs, color, customers, vehicles }) {
+  return (
+    <div style={{ ...styles.techSection, borderLeftColor: color }}>
+      <div style={{ ...styles.techHeader, background: color }}>
+        <div style={styles.techName}>{techName}</div>
+        <div style={styles.jobCount}>{jobs.length} {jobs.length === 1 ? 'job' : 'jobs'}</div>
       </div>
-      <div style={styles.calendarDays}>
-        {days.map((day, i) => (
-          <div
-            key={i}
-            onClick={() => day && setSelectedDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day))}
-            style={{
-              ...styles.calendarDay,
-              ...(day ? { cursor: 'pointer' } : {}),
-              ...(day && selectedDate.getDate() === day && selectedDate.getMonth() === currentMonth.getMonth() ? { background: '#E3F2FD' } : {}),
-              ...(hasWorkOrder(day) ? { borderBottom: '3px solid #F2A900' } : {}),
-            }}
-          >
-            {day}
-          </div>
-        ))}
+      <div style={styles.jobsList}>
+        {jobs.length === 0 ? (
+          <div style={styles.noJobs}>No jobs scheduled</div>
+        ) : (
+          jobs.map(wo => {
+            const woData = wo.data || wo;
+            const veh = vehicles.find(v => v.id === woData.vehicle_id);
+            return (
+              <div key={wo.id} style={styles.jobItem}>
+                <div style={styles.jobWONum}>WO #{wo.id.replace('wo', '')}</div>
+                <div style={styles.jobVehicle}>
+                  {veh?.data?.year} {veh?.data?.make} {veh?.data?.model}
+                </div>
+                <div style={styles.jobConcern}>{woData.complaint}</div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
@@ -249,37 +370,40 @@ function MiniCalendar({ selectedDate, setSelectedDate, workOrders }) {
 
 const styles = {
   app: { background: '#F5F5F5', minHeight: '100vh', fontFamily: "'Inter', sans-serif" },
-  header: { background: 'white', borderBottom: '1px solid #E0E0E0', padding: '16px 24px', display: 'flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
+  header: { background: 'white', borderBottom: '1px solid #E0E0E0', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
   logoSection: { display: 'flex', alignItems: 'center', gap: 12 },
   logoText: { fontSize: 18, fontWeight: '700', color: '#1565C0' },
   logoSub: { fontSize: 12, color: '#999' },
-  navbar: { background: 'white', borderBottom: '1px solid #E0E0E0', padding: '0 24px', display: 'flex', gap: 2 },
+  navbar: { background: 'white', borderBottom: '1px solid #E0E0E0', padding: '0 24px', display: 'flex', gap: 2, overflowX: 'auto' },
   navItem: { padding: '12px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', color: '#999', borderBottom: '3px solid transparent' },
   navItemActive: { padding: '12px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', color: '#F2A900', borderBottom: '3px solid #F2A900' },
   body: { padding: '24px', maxWidth: '1400px', margin: '0 auto' },
-  actionsSection: { display: 'flex', gap: 12, marginBottom: 24 },
+  actionsSection: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
   actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: 'white', border: 'none', borderRadius: 6, padding: '12px 20px', fontWeight: '600', fontSize: 14, cursor: 'pointer' },
-  metricsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 },
-  metricCard: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  metricLabel: { fontSize: 12, color: '#999', fontWeight: '600', textTransform: 'uppercase', marginBottom: 8 },
-  metricValue: { fontSize: 24, fontWeight: '700', color: '#1565C0' },
-  calendarSection: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  calendarHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  dateNav: { display: 'flex', alignItems: 'center', gap: 12 },
-  navBtn: { background: '#F5F5F5', border: '1px solid #E0E0E0', borderRadius: 4, padding: '6px 12px', cursor: 'pointer', fontSize: 14 },
-  calendarBody: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 },
-  dayWorkOrders: { borderRight: '1px solid #E0E0E0', paddingRight: 24 },
-  noJobs: { color: '#999', fontSize: 14, padding: 20, textAlign: 'center' },
-  dayJobCard: { background: '#F9F9F9', border: '1px solid #E0E0E0', borderRadius: 6, padding: 12, marginBottom: 12 },
-  jobWONum: { fontSize: 13, fontWeight: '700', color: '#1565C0' },
-  jobCustomer: { fontSize: 12, color: '#333', fontWeight: '600', marginTop: 4 },
-  jobVehicle: { fontSize: 12, color: '#666', marginTop: 2 },
-  jobComplaint: { fontSize: 12, color: '#999', marginTop: 4 },
-  miniCalendarContainer: { background: '#F9F9F9', borderRadius: 6, padding: 16 },
-  miniCalendarHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, fontSize: 13, fontWeight: '600' },
-  monthNavBtn: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 4, padding: '4px 8px', cursor: 'pointer', fontSize: 12 },
-  weekDays: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 },
-  weekDay: { textAlign: 'center', fontSize: 11, fontWeight: '600', color: '#999', padding: 4 },
-  calendarDays: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 },
-  calendarDay: { aspect: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, borderRadius: 4, border: '1px solid #E0E0E0' },
+  section: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 24 },
+  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
+  calendarBtn: { background: '#F5F5F5', border: '1px solid #E0E0E0', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 14, fontWeight: '600' },
+  filterTabs: { display: 'flex', gap: 8 },
+  filterTab: { padding: '8px 16px', border: '1px solid #E0E0E0', background: 'white', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: '600', color: '#666' },
+  filterTabActive: { background: '#F2A900', color: 'white', borderColor: '#F2A900' },
+  scheduleContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 },
+  techSection: { border: '1px solid #E0E0E0', borderRadius: 8, overflow: 'hidden', borderLeft: '4px solid' },
+  techHeader: { padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' },
+  techName: { fontSize: 14, fontWeight: '700' },
+  jobCount: { fontSize: 12, fontWeight: '600' },
+  jobsList: { padding: '12px' },
+  noJobs: { color: '#999', fontSize: 12, padding: '12px', textAlign: 'center' },
+  jobItem: { background: '#F9F9F9', border: '1px solid #E0E0E0', borderRadius: 6, padding: 12, marginBottom: 8, cursor: 'pointer' },
+  jobWONum: { fontSize: 12, fontWeight: '700', color: '#1565C0' },
+  jobVehicle: { fontSize: 11, color: '#333', marginTop: 4, fontWeight: '600' },
+  jobConcern: { fontSize: 11, color: '#666', marginTop: 4 },
+  woList: { display: 'grid', gap: 12 },
+  woCard: { background: '#F9F9F9', border: '1px solid #E0E0E0', borderRadius: 8, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' },
+  woContent: { flex: 1 },
+  woNumber: { fontSize: 13, fontWeight: '700', color: '#1565C0' },
+  woCustomer: { fontSize: 12, color: '#333', fontWeight: '600', marginTop: 4 },
+  woVehicle: { fontSize: 11, color: '#666', marginTop: 2 },
+  woStatus: { fontSize: 10, color: '#999', textTransform: 'capitalize', marginTop: 4 },
+  emptyState: { textAlign: 'center', padding: 40, color: '#999' },
 };
