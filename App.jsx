@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Wrench, ChevronRight } from 'lucide-react';
 
-// Mock data for development
 const MOCK_CUSTOMERS = [
   { id: "c1", data: { name: "Marcus Ebanks", phone: "345-925-1120", email: "marcus.e@candw.ky" } },
   { id: "c2", data: { name: "Sophia Ramoon", phone: "345-916-4482", email: "s.ramoon@gmail.com" } },
@@ -23,7 +22,9 @@ const MOCK_WORK_ORDERS = [
       status: "in_progress",
       complaint: "Engine not starting, battery may be dead",
       labor: { l1: { desc: "Diagnostic check", hours: 1, rate: 95, technician_id: "tech1" } },
-      opened_at: "2024-12-15"
+      opened_at: "2024-12-15",
+      notes: [],
+      signature: null
     }
   },
   {
@@ -34,30 +35,34 @@ const MOCK_WORK_ORDERS = [
       status: "completed",
       complaint: "Regular 30k service",
       labor: { l2: { desc: "30k service", hours: 1.5, rate: 95, technician_id: "tech2" } },
-      opened_at: "2024-12-14"
+      opened_at: "2024-12-14",
+      notes: [{ author: "Carlos", text: "Service completed successfully", ts: "2024-12-14 3:45 PM" }],
+      signature: { customerName: "Marcus Ebanks", date: "2024-12-14", time: "03:45 PM" }
     }
   },
 ];
 
 const WO_STATUS_STYLES = {
-  open: { label: "Open", bg: "#1A4D3E", color: "#3ECF8E" },
-  waiting_parts: { label: "Waiting on Parts", bg: "#4D3E1A", color: "#F2A900" },
-  in_progress: { label: "In Progress", bg: "#3E2A4D", color: "#7B68EE" },
-  completed: { label: "Completed", bg: "#1A3E4D", color: "#3A6EA5" },
-  notified: { label: "Notified", bg: "#2A4D1A", color: "#3ECF8E" },
+  open: { label: "Open", bg: "#E8F5E9", color: "#2E7D32" },
+  waiting_parts: { label: "Waiting on Parts", bg: "#FFF3E0", color: "#F57C00" },
+  in_progress: { label: "In Progress", bg: "#E3F2FD", color: "#1565C0" },
+  completed: { label: "Completed", bg: "#F3E5F5", color: "#6A1B9A" },
+  notified: { label: "Notified", bg: "#E0F2F1", color: "#00796B" },
 };
 
 export default function AutoLabApp() {
   const [screen, setScreen] = useState("dashboard");
   const [activeWorkOrderId, setActiveWorkOrderId] = useState(null);
   const [workOrders] = useState(MOCK_WORK_ORDERS);
+  const [customers] = useState(MOCK_CUSTOMERS);
+  const [vehicles] = useState(MOCK_VEHICLES);
 
   if (screen === "dashboard") {
     return (
       <div style={styles.app}>
         <div style={styles.header}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Wrench size={20} color="#F2A900" />
+            <Wrench size={24} color="#1565C0" />
             <div>
               <div style={styles.brandName}>Auto Lab</div>
               <div style={styles.brandSub}>Shop Management</div>
@@ -66,56 +71,58 @@ export default function AutoLabApp() {
         </div>
 
         <div style={styles.body}>
-          <div style={styles.workOrdersSectionHeader}>
-            <div style={styles.workOrdersSectionTitle}>Active Work Orders</div>
-            <div style={styles.workOrdersCount}>{workOrders.length} Total</div>
+          <div style={styles.sectionHeader}>
+            <div style={styles.sectionTitle}>Active Work Orders</div>
+            <div style={styles.badge}>{workOrders.length} Total</div>
           </div>
 
-          <div style={styles.workOrdersGrid}>
+          <div style={styles.grid}>
             {workOrders.map((wo) => {
-              const cust = MOCK_CUSTOMERS.find((c) => c.id === wo.data.customer_id);
-              const veh = MOCK_VEHICLES.find((v) => v.id === wo.data.vehicle_id);
-              const st = WO_STATUS_STYLES[wo.data.status] || WO_STATUS_STYLES.open;
-              const laborTotal = Object.values(wo.data.labor || {}).reduce((s, l) => s + l.hours * l.rate, 0);
-              const total = laborTotal + 250;
+              const woData = wo.data || wo;
+              const cust = customers.find((c) => c.id === woData.customer_id);
+              const veh = vehicles.find((v) => v.id === woData.vehicle_id);
+              const st = WO_STATUS_STYLES[woData.status] || WO_STATUS_STYLES.open;
+              const laborTotal = Object.values(woData.labor || {}).reduce((s, l) => s + l.hours * l.rate, 0);
 
               return (
                 <div
                   key={wo.id}
-                  style={styles.woCard}
+                  style={styles.card}
                   onClick={() => {
                     setActiveWorkOrderId(wo.id);
                     setScreen("workOrderDetail");
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                     <div>
-                      <div style={styles.woCardId}>WO #{wo.id.replace("wo", "")}</div>
-                      <div style={styles.woCardCustomer}>{cust?.data.name}</div>
+                      <div style={styles.woId}>WO #{wo.id.replace("wo", "")}</div>
+                      <div style={styles.woCustomer}>{cust?.data?.name}</div>
                     </div>
-                    <div style={{ ...styles.badge, color: st.color, background: st.bg }}>
+                    <div style={{ ...styles.statusBadge, backgroundColor: st.bg, color: st.color }}>
                       {st.label}
                     </div>
                   </div>
 
-                  <div style={{ fontSize: 12, color: "#8A93A6", marginBottom: 8, paddingBottom: 8, borderBottom: "1px solid #1E232B" }}>
-                    {veh?.data.year} {veh?.data.make} {veh?.data.model}
+                  <div style={styles.divider} />
+
+                  <div style={{ fontSize: 13, color: "#666", marginBottom: 12 }}>
+                    {veh?.data?.year} {veh?.data?.make} {veh?.data?.model}
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: "#5A6272", fontWeight: 600 }}>PLATE</div>
-                      <div style={{ fontSize: 13, color: "#E7EAEF", marginTop: 2 }}>{veh?.data.plate}</div>
+                      <div style={styles.label}>PLATE</div>
+                      <div style={styles.value}>{veh?.data?.plate}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10, color: "#5A6272", fontWeight: 600 }}>AMOUNT</div>
-                      <div style={{ fontSize: 13, color: "#F2A900", marginTop: 2 }}>${total.toFixed(2)}</div>
+                      <div style={styles.label}>AMOUNT</div>
+                      <div style={{ fontSize: 14, fontWeight: "600", color: "#1565C0" }}>${laborTotal.toFixed(2)}</div>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #1E232B" }}>
-                    <div style={{ fontSize: 11, color: "#8A93A6" }}>{wo.data.opened_at}</div>
-                    <ChevronRight size={16} color="#8A93A6" />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #E0E0E0" }}>
+                    <span style={{ fontSize: 12, color: "#999" }}>{woData.opened_at}</span>
+                    <ChevronRight size={18} color="#999" />
                   </div>
                 </div>
               );
@@ -130,119 +137,105 @@ export default function AutoLabApp() {
     const wo = workOrders.find((w) => w.id === activeWorkOrderId);
     if (!wo) return null;
 
-    const cust = MOCK_CUSTOMERS.find((c) => c.id === wo.data.customer_id);
-    const veh = MOCK_VEHICLES.find((v) => v.id === wo.data.vehicle_id);
-    const st = WO_STATUS_STYLES[wo.data.status] || WO_STATUS_STYLES.open;
+    const woData = wo.data || wo;
+    const cust = customers.find((c) => c.id === woData.customer_id);
+    const veh = vehicles.find((v) => v.id === woData.vehicle_id);
+    const st = WO_STATUS_STYLES[woData.status] || WO_STATUS_STYLES.open;
 
-    return (
-      <div style={styles.app}>
-        <div style={styles.header}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Wrench size={20} color="#F2A900" />
-            <div>
-              <div style={styles.brandName}>Auto Lab</div>
-              <div style={styles.brandSub}>Work Order Detail</div>
-            </div>
-          </div>
-          <button style={styles.backBtn} onClick={() => setScreen("dashboard")}>
-            ← Back
-          </button>
-        </div>
-
-        <div style={styles.body}>
-          <div style={{ background: "#12151A", border: "1px solid #1E232B", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={styles.woCardId}>Work Order #{wo.id.replace("wo", "")}</div>
-                <div style={styles.woCardCustomer}>{cust?.data.name}</div>
-              </div>
-              <div style={{ ...styles.badge, color: st.color, background: st.bg }}>
-                {st.label}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: "#12151A", border: "1px solid #1E232B", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#5A6272", textTransform: "uppercase", marginBottom: 12 }}>
-              Vehicle Information
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 11, color: "#8A93A6", marginBottom: 4 }}>VEHICLE</div>
-                <div style={{ fontSize: 13, color: "#E7EAEF" }}>
-                  {veh?.data.year} {veh?.data.make} {veh?.data.model}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: "#8A93A6", marginBottom: 4 }}>PLATE</div>
-                <div style={{ fontSize: 13, color: "#E7EAEF" }}>{veh?.data.plate}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: "#8A93A6", marginBottom: 4 }}>VIN</div>
-                <div style={{ fontSize: 12, color: "#E7EAEF", fontFamily: "monospace" }}>{veh?.data.vin}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, color: "#8A93A6", marginBottom: 4 }}>MILEAGE</div>
-                <div style={{ fontSize: 13, color: "#E7EAEF" }}>{veh?.data.mileage.toLocaleString()} km</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: "#12151A", border: "1px solid #1E232B", borderRadius: 12, padding: 16, marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#5A6272", textTransform: "uppercase", marginBottom: 12 }}>
-              Customer Concern
-            </div>
-            <div style={{ fontSize: 13, color: "#E7EAEF", lineHeight: 1.6 }}>{wo.data.complaint}</div>
-          </div>
-
-          <div style={{ background: "#12151A", border: "1px solid #1E232B", borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#5A6272", textTransform: "uppercase", marginBottom: 12 }}>
-              Work Items
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #1E232B" }}>
-                  <th style={{ textAlign: "left", padding: 8, fontSize: 11, color: "#8A93A6", fontWeight: 600 }}>Description</th>
-                  <th style={{ textAlign: "right", padding: 8, fontSize: 11, color: "#8A93A6", fontWeight: 600 }}>Hours</th>
-                  <th style={{ textAlign: "right", padding: 8, fontSize: 11, color: "#8A93A6", fontWeight: 600 }}>Rate</th>
-                  <th style={{ textAlign: "right", padding: 8, fontSize: 11, color: "#8A93A6", fontWeight: 600 }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(wo.data.labor || {}).map(([id, labor]) => (
-                  <tr key={id} style={{ borderBottom: "1px solid #1E232B" }}>
-                    <td style={{ padding: 8, fontSize: 13, color: "#E7EAEF" }}>🔧 {labor.desc}</td>
-                    <td style={{ padding: 8, fontSize: 13, color: "#E7EAEF", textAlign: "right" }}>{labor.hours}</td>
-                    <td style={{ padding: 8, fontSize: 13, color: "#E7EAEF", textAlign: "right" }}>${labor.rate.toFixed(2)}</td>
-                    <td style={{ padding: 8, fontSize: 13, color: "#F2A900", textAlign: "right", fontWeight: 600 }}>
-                      ${(labor.hours * labor.rate).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    );
+    return <WorkOrderDetail wo={wo} woData={woData} customer={cust} vehicle={veh} statusStyle={st} onBack={() => setScreen("dashboard")} />;
   }
 
   return null;
 }
 
-const styles = {
-  app: { background: "#0B0D10", color: "#E7EAEF", minHeight: "100vh", fontFamily: "'Inter', sans-serif" },
-  header: { background: "#12151A", borderBottom: "1px solid #1E232B", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" },
-  brandName: { fontSize: 16, fontWeight: 700, color: "#F2A900" },
-  brandSub: { fontSize: 11, color: "#8A93A6" },
-  body: { padding: "24px" },
-  backBtn: { background: "#F2A900", color: "#0B0D10", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 600, fontSize: 13, cursor: "pointer" },
-  workOrdersSectionHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
-  workOrdersSectionTitle: { fontSize: 18, fontWeight: 700, color: "#E7EAEF" },
-  workOrdersCount: { fontSize: 13, color: "#8A93A6", background: "#12151A", padding: "6px 12px", borderRadius: 6 },
-  workOrdersGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 14 },
-  woCard: { background: "#12151A", border: "1px solid #1E232B", borderRadius: 12, padding: 16, cursor: "pointer", transition: "all 0.2s" },
-  woCardId: { fontSize: 14, fontWeight: 700, color: "#F2A900" },
-  woCardCustomer: { fontSize: 13, color: "#E7EAEF", marginTop: 4 },
-  badge: { padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 600 },
-};
+function WorkOrderDetail({ wo, woData, customer, vehicle, statusStyle, onBack }) {
+  const [notes, setNotes] = useState(woData.notes || []);
+  const [newNote, setNewNote] = useState("");
+  const [signature, setSignature] = useState(woData.signature);
+  const [signatureName, setSignatureName] = useState("");
+  const [showSignatureForm, setShowSignatureForm] = useState(!signature);
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    const now = new Date();
+    const note = {
+      author: "Service Writer",
+      text: newNote,
+      ts: now.toLocaleString()
+    };
+    setNotes([...notes, note]);
+    setNewNote("");
+  };
+
+  const handleCaptureSignature = () => {
+    if (!signatureName.trim()) return;
+    const now = new Date();
+    const sig = {
+      customerName: signatureName,
+      date: now.toISOString().split("T")[0],
+      time: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+    };
+    setSignature(sig);
+    setShowSignatureForm(false);
+  };
+
+  return (
+    <div style={styles.app}>
+      <div style={styles.header}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Wrench size={24} color="#1565C0" />
+          <div>
+            <div style={styles.brandName}>Auto Lab</div>
+            <div style={styles.brandSub}>Work Order Detail</div>
+          </div>
+        </div>
+        <button style={styles.backBtn} onClick={onBack}>
+          ← Back
+        </button>
+      </div>
+
+      <div style={styles.body}>
+        <div style={styles.card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={styles.woId}>Work Order #{wo.id.replace("wo", "")}</div>
+              <div style={styles.woCustomer}>{customer?.data?.name}</div>
+            </div>
+            <div style={{ ...styles.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+              {statusStyle.label}
+            </div>
+          </div>
+        </div>
+
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Vehicle Information</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div>
+              <div style={styles.label}>VEHICLE</div>
+              <div style={styles.value}>{vehicle?.data?.year} {vehicle?.data?.make} {vehicle?.data?.model}</div>
+            </div>
+            <div>
+              <div style={styles.label}>PLATE</div>
+              <div style={styles.value}>{vehicle?.data?.plate}</div>
+            </div>
+            <div>
+              <div style={styles.label}>VIN</div>
+              <div style={{ ...styles.value, fontFamily: "monospace", fontSize: 12 }}>{vehicle?.data?.vin}</div>
+            </div>
+            <div>
+              <div style={styles.label}>MILEAGE</div>
+              <div style={styles.value}>{vehicle?.data?.mileage.toLocaleString()} km</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Customer Concern</div>
+          <div style={{ fontSize: 14, color: "#333", lineHeight: 1.6 }}>{woData.complaint}</div>
+        </div>
+
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Work Items</div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom:
