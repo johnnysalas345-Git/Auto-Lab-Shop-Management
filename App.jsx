@@ -7,7 +7,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Technician colors
 const TECH_COLORS = {
   tech1: '#7C3AED', // Purple
   tech2: '#6B7280', // Gray
@@ -21,8 +20,7 @@ export default function GarageDashboard() {
   const [workOrders, setWorkOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [selectedWO, setSelectedWO] = useState(null);
-  const isAdmin = true; // TODO: Check user role from auth
+  const isAdmin = true;
 
   useEffect(() => {
     loadData();
@@ -43,14 +41,6 @@ export default function GarageDashboard() {
     }
   }
 
-  const getTodayJobs = () => {
-    const today = new Date().toISOString().split('T')[0];
-    return workOrders.filter(wo => {
-      const woData = wo.data || wo;
-      return woData.opened_at === today;
-    });
-  };
-
   const groupJobsByTech = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayJobs = workOrders.filter(wo => {
@@ -69,7 +59,6 @@ export default function GarageDashboard() {
     todayJobs.forEach(wo => {
       const woData = wo.data || wo;
       const techId = woData.labor ? Object.values(woData.labor)[0]?.technician_id : null;
-      
       if (techId && grouped[techId]) {
         grouped[techId].push(wo);
       } else {
@@ -113,7 +102,6 @@ export default function GarageDashboard() {
         <Navigation activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
 
         <div style={styles.body}>
-          {/* Action Buttons */}
           <div style={styles.actionsSection}>
             <button style={{ ...styles.actionBtn, background: '#2E7D32' }}>
               <Users size={20} />
@@ -128,77 +116,61 @@ export default function GarageDashboard() {
               <span>New Estimate</span>
             </button>
             {isAdmin && (
-              <button style={{ ...styles.actionBtn, background: '#6B21A8' }} title="Finance Dashboard">
+              <button style={{ ...styles.actionBtn, background: '#6B21A8' }}>
                 <DollarSign size={20} />
                 <span>Finance</span>
               </button>
             )}
           </div>
 
-          {/* Today's Schedule */}
-          <div style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>Today's Schedule</h2>
-              <button style={styles.calendarBtn}>📅 View Calendar</button>
+          <div style={styles.mainContainer}>
+            {/* LEFT: Today's Schedule */}
+            <div style={styles.leftSection}>
+              <div style={styles.sectionHeader}>
+                <h2 style={styles.sectionTitle}>Today's Schedule</h2>
+                <button style={styles.calendarBtn}>📅 Calendar</button>
+              </div>
+
+              <div style={styles.scrollableContent}>
+                <TechSchedule 
+                  techName="Technician 1" 
+                  jobs={jobsByTech.tech1} 
+                  color={TECH_COLORS.tech1}
+                  vehicles={vehicles}
+                />
+                <TechSchedule 
+                  techName="Technician 2" 
+                  jobs={jobsByTech.tech2} 
+                  color={TECH_COLORS.tech2}
+                  vehicles={vehicles}
+                />
+                <TechSchedule 
+                  techName="Technician 3" 
+                  jobs={jobsByTech.tech3} 
+                  color={TECH_COLORS.tech3}
+                  vehicles={vehicles}
+                />
+                <TechSchedule 
+                  techName="Technician 4" 
+                  jobs={jobsByTech.tech4} 
+                  color={TECH_COLORS.tech4}
+                  vehicles={vehicles}
+                />
+                <TechSchedule 
+                  techName="Unassigned" 
+                  jobs={jobsByTech.unassigned} 
+                  color="#D1D5DB"
+                  vehicles={vehicles}
+                />
+              </div>
             </div>
 
-            <div style={styles.scheduleContainer}>
-              {/* Tech 1 */}
-              <TechSchedule 
-                techName="Technician 1" 
-                techId="tech1"
-                jobs={jobsByTech.tech1} 
-                color={TECH_COLORS.tech1}
-                customers={customers}
-                vehicles={vehicles}
-              />
+            {/* RIGHT: Active Work Orders */}
+            <div style={styles.rightSection}>
+              <div style={styles.sectionHeader}>
+                <h2 style={styles.sectionTitle}>Active Work Orders</h2>
+              </div>
 
-              {/* Tech 2 */}
-              <TechSchedule 
-                techName="Technician 2" 
-                techId="tech2"
-                jobs={jobsByTech.tech2} 
-                color={TECH_COLORS.tech2}
-                customers={customers}
-                vehicles={vehicles}
-              />
-
-              {/* Tech 3 */}
-              <TechSchedule 
-                techName="Technician 3" 
-                techId="tech3"
-                jobs={jobsByTech.tech3} 
-                color={TECH_COLORS.tech3}
-                customers={customers}
-                vehicles={vehicles}
-              />
-
-              {/* Tech 4 */}
-              <TechSchedule 
-                techName="Technician 4" 
-                techId="tech4"
-                jobs={jobsByTech.tech4} 
-                color={TECH_COLORS.tech4}
-                customers={customers}
-                vehicles={vehicles}
-              />
-
-              {/* Unassigned */}
-              <TechSchedule 
-                techName="Unassigned" 
-                techId="unassigned"
-                jobs={jobsByTech.unassigned} 
-                color="#D1D5DB"
-                customers={customers}
-                vehicles={vehicles}
-              />
-            </div>
-          </div>
-
-          {/* Active Work Orders */}
-          <div style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>Active Work Orders</h2>
               <div style={styles.filterTabs}>
                 <button 
                   style={{ ...styles.filterTab, ...(activeFilter === 'all' ? styles.filterTabActive : {}) }}
@@ -225,33 +197,33 @@ export default function GarageDashboard() {
                   Waiting Parts
                 </button>
               </div>
-            </div>
 
-            <div style={styles.woList}>
-              {activeWOs.length === 0 ? (
-                <div style={styles.emptyState}>No active work orders</div>
-              ) : (
-                activeWOs.map(wo => {
-                  const { woData, cust, veh } = getJobInfo(wo);
-                  return (
-                    <div key={wo.id} style={styles.woCard}>
-                      <div style={styles.woContent}>
-                        <div style={styles.woNumber}>WO #{wo.id.replace('wo', '')}</div>
-                        <div style={styles.woCustomer}>{cust?.data?.name}</div>
-                        <div style={styles.woVehicle}>
-                          {veh?.data?.year} {veh?.data?.make} {veh?.data?.model}
+              <div style={styles.scrollableContent}>
+                {activeWOs.length === 0 ? (
+                  <div style={styles.emptyState}>No active work orders</div>
+                ) : (
+                  activeWOs.map(wo => {
+                    const { woData, cust, veh } = getJobInfo(wo);
+                    return (
+                      <div key={wo.id} style={styles.woCard}>
+                        <div style={styles.woContent}>
+                          <div style={styles.woNumber}>WO #{wo.id.replace('wo', '')}</div>
+                          <div style={styles.woCustomer}>{cust?.data?.name}</div>
+                          <div style={styles.woVehicle}>
+                            {veh?.data?.year} {veh?.data?.make} {veh?.data?.model}
+                          </div>
+                          <div style={styles.woStatus}>{woData.status}</div>
                         </div>
-                        <div style={styles.woStatus}>{woData.status}</div>
+                        <ChevronRight size={20} color="#999" />
                       </div>
-                      <ChevronRight size={20} color="#999" />
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Sections C & D - Placeholder */}
+          {/* Sections C & D */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
             <div style={{ ...styles.section, background: '#F0F0F0', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center', color: '#999' }}>
@@ -307,38 +279,20 @@ function Header({ isAdmin }) {
 function Navigation({ activeTab, setActiveTab, isAdmin }) {
   return (
     <div style={styles.navbar}>
-      <button style={activeTab === 'dashboard' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('dashboard')}>
-        DASHBOARD
-      </button>
-      <button style={activeTab === 'jobs' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('jobs')}>
-        JOBS & INVOICES
-      </button>
-      <button style={activeTab === 'expenses' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('expenses')}>
-        EXPENSES
-      </button>
-      <button style={activeTab === 'hours' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('hours')}>
-        HOURS
-      </button>
-      <button style={activeTab === 'payroll' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('payroll')}>
-        PAYROLL
-      </button>
-      <button style={activeTab === 'pension' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('pension')}>
-        PENSION
-      </button>
-      <button style={activeTab === 'cash' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('cash')}>
-        CASH & BANK
-      </button>
-      <button style={activeTab === 'import' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('import')}>
-        IMPORT
-      </button>
-      <button style={activeTab === 'settings' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('settings')}>
-        SETTINGS
-      </button>
+      <button style={activeTab === 'dashboard' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('dashboard')}>DASHBOARD</button>
+      <button style={activeTab === 'jobs' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('jobs')}>JOBS & INVOICES</button>
+      <button style={activeTab === 'expenses' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('expenses')}>EXPENSES</button>
+      <button style={activeTab === 'hours' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('hours')}>HOURS</button>
+      <button style={activeTab === 'payroll' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('payroll')}>PAYROLL</button>
+      <button style={activeTab === 'pension' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('pension')}>PENSION</button>
+      <button style={activeTab === 'cash' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('cash')}>CASH & BANK</button>
+      <button style={activeTab === 'import' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('import')}>IMPORT</button>
+      <button style={activeTab === 'settings' ? styles.navItemActive : styles.navItem} onClick={() => setActiveTab('settings')}>SETTINGS</button>
     </div>
   );
 }
 
-function TechSchedule({ techName, techId, jobs, color, customers, vehicles }) {
+function TechSchedule({ techName, jobs, color, vehicles }) {
   return (
     <div style={{ ...styles.techSection, borderLeftColor: color }}>
       <div style={{ ...styles.techHeader, background: color }}>
@@ -369,7 +323,7 @@ function TechSchedule({ techName, techId, jobs, color, customers, vehicles }) {
 }
 
 const styles = {
-  app: { background: '#F5F5F5', minHeight: '100vh', fontFamily: "'Inter', sans-serif" },
+  app: { background: '#F5F5F5', minHeight: '100vh', fontFamily: "'Inter', sans-serif", display: 'flex', flexDirection: 'column' },
   header: { background: 'white', borderBottom: '1px solid #E0E0E0', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' },
   logoSection: { display: 'flex', alignItems: 'center', gap: 12 },
   logoText: { fontSize: 18, fontWeight: '700', color: '#1565C0' },
@@ -377,18 +331,21 @@ const styles = {
   navbar: { background: 'white', borderBottom: '1px solid #E0E0E0', padding: '0 24px', display: 'flex', gap: 2, overflowX: 'auto' },
   navItem: { padding: '12px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', color: '#999', borderBottom: '3px solid transparent' },
   navItemActive: { padding: '12px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', color: '#F2A900', borderBottom: '3px solid #F2A900' },
-  body: { padding: '24px', maxWidth: '1400px', margin: '0 auto' },
+  body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   actionsSection: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
   actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: 'white', border: 'none', borderRadius: 6, padding: '12px 20px', fontWeight: '600', fontSize: 14, cursor: 'pointer' },
-  section: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: 24 },
-  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  mainContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, minHeight: 600 },
+  leftSection: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' },
+  rightSection: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' },
+  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #E0E0E0' },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
   calendarBtn: { background: '#F5F5F5', border: '1px solid #E0E0E0', borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 14, fontWeight: '600' },
-  filterTabs: { display: 'flex', gap: 8 },
+  filterTabs: { display: 'flex', gap: 8, padding: '12px 24px', borderBottom: '1px solid #E0E0E0', flexWrap: 'wrap' },
   filterTab: { padding: '8px 16px', border: '1px solid #E0E0E0', background: 'white', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: '600', color: '#666' },
   filterTabActive: { background: '#F2A900', color: 'white', borderColor: '#F2A900' },
-  scheduleContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 },
-  techSection: { border: '1px solid #E0E0E0', borderRadius: 8, overflow: 'hidden', borderLeft: '4px solid' },
+  scrollableContent: { flex: 1, overflowY: 'auto', padding: '12px 24px' },
+  section: { background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
+  techSection: { border: '1px solid #E0E0E0', borderRadius: 8, overflow: 'hidden', borderLeft: '4px solid', marginBottom: 12 },
   techHeader: { padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' },
   techName: { fontSize: 14, fontWeight: '700' },
   jobCount: { fontSize: 12, fontWeight: '600' },
@@ -398,8 +355,7 @@ const styles = {
   jobWONum: { fontSize: 12, fontWeight: '700', color: '#1565C0' },
   jobVehicle: { fontSize: 11, color: '#333', marginTop: 4, fontWeight: '600' },
   jobConcern: { fontSize: 11, color: '#666', marginTop: 4 },
-  woList: { display: 'grid', gap: 12 },
-  woCard: { background: '#F9F9F9', border: '1px solid #E0E0E0', borderRadius: 8, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' },
+  woCard: { background: '#F9F9F9', border: '1px solid #E0E0E0', borderRadius: 8, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: 12 },
   woContent: { flex: 1 },
   woNumber: { fontSize: 13, fontWeight: '700', color: '#1565C0' },
   woCustomer: { fontSize: 12, color: '#333', fontWeight: '600', marginTop: 4 },
