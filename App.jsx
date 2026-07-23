@@ -26,6 +26,20 @@ const TECH_COLORS = {
   tech4: '#B87C7C',
 };
 
+function getStatusStyle(status) {
+  const statusColors = {
+    open: { background: '#DFE9F8', color: '#4A90E2', fontWeight: '600' },
+    in_progress: { background: '#F5E8D9', color: '#C08A3C', fontWeight: '600' },
+    waiting_parts: { background: '#F5E8D9', color: '#C08A3C', fontWeight: '600' },
+    estimate: { background: '#E8E3F2', color: '#7B68A6', fontWeight: '600' },
+    pending_pay: { background: '#FCE3E3', color: '#B87C7C', fontWeight: '600' },
+    partial: { background: '#F5E8D9', color: '#C08A3C', fontWeight: '600' },
+    completed: { background: '#DFE9D9', color: '#6BA388', fontWeight: '600' },
+    paid: { background: '#DFE9D9', color: '#6BA388', fontWeight: '600' },
+  };
+  return statusColors[status] || { background: '#F3F5F8', color: COLORS.textLight, fontWeight: '600' };
+}
+
 export default function GarageDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -107,20 +121,6 @@ export default function GarageDashboard() {
     const cust = customers.find(c => c.id === woData.customer_id);
     const veh = vehicles.find(v => v.id === woData.vehicle_id);
     return { woData, cust, veh };
-  };
-
-  const getStatusStyle = (status) => {
-    const statusColors = {
-      open: { background: '#DFE9F8', color: '#4A90E2', fontWeight: '600' },
-      in_progress: { background: '#F5E8D9', color: '#C08A3C', fontWeight: '600' },
-      waiting_parts: { background: '#F5E8D9', color: '#C08A3C', fontWeight: '600' },
-      estimate: { background: '#E8E3F2', color: '#7B68A6', fontWeight: '600' },
-      pending_pay: { background: '#FCE3E3', color: '#B87C7C', fontWeight: '600' },
-      partial: { background: '#F5E8D9', color: '#C08A3C', fontWeight: '600' },
-      completed: { background: '#DFE9D9', color: '#6BA388', fontWeight: '600' },
-      paid: { background: '#DFE9D9', color: '#6BA388', fontWeight: '600' },
-    };
-    return statusColors[status] || { background: '#F3F5F8', color: COLORS.textLight, fontWeight: '600' };
   };
 
   const menuItems = [
@@ -411,30 +411,42 @@ export default function GarageDashboard() {
 function CustomersView() {
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [workOrders, setWorkOrders] = useState([]);
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [showAddVehicleForm, setShowAddVehicleForm] = useState(false);
+  const [selectedCustomerForVehicle, setSelectedCustomerForVehicle] = useState(null);
+  const [selectedVehicleHistory, setSelectedVehicleHistory] = useState(null);
 
   useEffect(() => {
-    loadCustomersAndVehicles();
+    loadAllData();
   }, []);
 
-  async function loadCustomersAndVehicles() {
+  async function loadAllData() {
     try {
-      const [custRes, vehRes] = await Promise.all([
+      const [custRes, vehRes, woRes] = await Promise.all([
         supabase.from('customers').select('*'),
         supabase.from('vehicles').select('*'),
+        supabase.from('work_orders').select('*'),
       ]);
       setCustomers(custRes.data || []);
       setVehicles(vehRes.data || []);
+      setWorkOrders(woRes.data || []);
     } catch (err) {
       console.error('Error loading data:', err);
     }
   }
 
-  const customerVehicles = selectedCustomer 
-    ? vehicles.filter(v => v.customer_id === selectedCustomer.id)
-    : [];
+  const getVehicleWorkOrders = (vehicleId) => {
+    return workOrders.filter(wo => {
+      const woData = wo.data || wo;
+      return woData.vehicle_id === vehicleId;
+    });
+  };
+
+  const customerVehicleMap = {};
+  customers.forEach(cust => {
+    customerVehicleMap[cust.id] = vehicles.filter(v => v.customer_id === cust.id);
+  });
 
   return (
     <div style={{ ...styles.app, background: COLORS.bg }}>
@@ -463,133 +475,147 @@ function CustomersView() {
       </div>
 
       <div style={{ ...styles.body, background: COLORS.bg }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, minHeight: 600 }}>
-          <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ ...styles.sectionHeader, borderBottom: '1px solid', borderColor: COLORS.border, padding: '16px 24px' }}>
-              <h2 style={{ ...styles.sectionTitle, color: COLORS.text, margin: 0 }}>Customers</h2>
-              <button 
-                onClick={() => setShowNewCustomerForm(!showNewCustomerForm)}
-                style={{ ...styles.actionBtn, position: 'absolute', right: 24, background: '#4CAF50', border: '1px solid #4CAF50', gap: 4, padding: '8px 12px', fontSize: 12 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#45a049'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#4CAF50'; }}
-              >
-                <span>➕</span>
-                <span>New</span>
-              </button>
-            </div>
-
-            {showNewCustomerForm && (
-              <NewCustomerForm 
-                onSave={() => { loadCustomersAndVehicles(); setShowNewCustomerForm(false); }}
-                onCancel={() => setShowNewCustomerForm(false)}
-              />
-            )}
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
-              {customers.length === 0 ? (
-                <div style={{ textAlign: 'center', color: COLORS.textLight, padding: 40 }}>No customers yet</div>
-              ) : (
-                customers.map(customer => (
-                  <div 
-                    key={customer.id}
-                    onClick={() => setSelectedCustomer(customer)}
-                    style={{
-                      ...styles.woCard,
-                      background: selectedCustomer?.id === customer.id ? COLORS.primary : COLORS.primaryLight,
-                      color: selectedCustomer?.id === customer.id ? 'white' : COLORS.text,
-                      borderColor: selectedCustomer?.id === customer.id ? COLORS.primary : COLORS.border,
-                      marginBottom: 8,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: 13 }}>{customer.data?.name}</div>
-                      <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>{customer.data?.phone}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ color: COLORS.text, margin: 0, fontSize: 20, fontWeight: '700' }}>Customers & Vehicles</h2>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button 
+              onClick={() => setShowNewCustomerForm(!showNewCustomerForm)}
+              style={{ ...styles.actionBtn, background: '#4CAF50', border: '1px solid #4CAF50', gap: 4, padding: '8px 12px', fontSize: 12 }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#45a049'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#4CAF50'; }}
+            >
+              <span>➕</span>
+              <span>New Customer</span>
+            </button>
           </div>
+        </div>
 
-          {selectedCustomer ? (
-            <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...styles.sectionHeader, borderBottom: '1px solid', borderColor: COLORS.border, padding: '16px 24px' }}>
-                <h2 style={{ ...styles.sectionTitle, color: COLORS.text, margin: 0 }}>Customer Profile</h2>
-              </div>
+        {showNewCustomerForm && (
+          <NewCustomerForm 
+            onSave={() => { loadAllData(); setShowNewCustomerForm(false); }}
+            onCancel={() => setShowNewCustomerForm(false)}
+          />
+        )}
 
-              <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-                <div style={{ marginBottom: 32, paddingBottom: 24, borderBottom: '1px solid', borderColor: COLORS.border }}>
-                  <h3 style={{ color: COLORS.text, marginBottom: 16, fontSize: 14, fontWeight: '700' }}>Personal Information</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
-                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>NAME</div>
-                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.name}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>PHONE</div>
-                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.phone}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>EMAIL</div>
-                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.email || '—'}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>ADDRESS</div>
-                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.address || '—'}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                    <h3 style={{ color: COLORS.text, fontSize: 14, fontWeight: '700', margin: 0 }}>Vehicles ({customerVehicles.length})</h3>
-                    <button 
-                      onClick={() => setShowAddVehicleForm(!showAddVehicleForm)}
-                      style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', gap: 4, padding: '6px 10px', fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = '#0b7dda'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = '#2196F3'; }}
-                    >
-                      <span>➕</span>
-                      <span>Add Vehicle</span>
-                    </button>
-                  </div>
-
-                  {showAddVehicleForm && (
-                    <AddVehicleForm 
-                      customerId={selectedCustomer.id}
-                      onSave={() => { loadCustomersAndVehicles(); setShowAddVehicleForm(false); }}
-                      onCancel={() => setShowAddVehicleForm(false)}
-                    />
-                  )}
-
-                  {customerVehicles.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: COLORS.textLight, padding: 32, background: COLORS.primaryLight, borderRadius: 8 }}>
-                      No vehicles. Click "Add Vehicle" to add one.
-                    </div>
-                  ) : (
-                    customerVehicles.map(vehicle => (
-                      <div key={vehicle.id} style={{ ...styles.woCard, background: COLORS.primaryLight, borderColor: COLORS.border, marginBottom: 12 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ color: COLORS.primary, fontWeight: '700', fontSize: 13 }}>
-                            {vehicle.data?.year} {vehicle.data?.make} {vehicle.data?.model}
-                          </div>
-                          <div style={{ fontSize: 11, marginTop: 4, color: COLORS.text }}>Plate: <strong>{vehicle.data?.license_plate}</strong></div>
-                          <div style={{ fontSize: 11, marginTop: 2, color: COLORS.textLight }}>VIN: {vehicle.data?.vin || '—'}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.textLight }}>
-              Select a customer to view details
-            </div>
-          )}
+        <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: COLORS.primaryLight, borderBottom: '2px solid', borderColor: COLORS.border }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 200 }}>Name</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>Phone</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 120 }}>Brand</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>Model</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>License Plate</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 80 }}>Work Orders</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 100 }}>Add Vehicle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customers.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ padding: 40, textAlign: 'center', color: COLORS.textLight }}>No customers yet</td>
+                  </tr>
+                ) : (
+                  customers.map(customer => {
+                    const custVehicles = customerVehicleMap[customer.id] || [];
+                    return (
+                      <React.Fragment key={customer.id}>
+                        {custVehicles.length === 0 ? (
+                          <tr style={{ borderBottom: '1px solid', borderColor: COLORS.border, background: 'transparent' }}>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{customer.data?.name}</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{customer.data?.phone}</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>—</td>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                              <button 
+                                onClick={() => setSelectedCustomerForVehicle(customer.id)}
+                                style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', gap: 4, padding: '4px 8px', fontSize: 11 }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#0b7dda'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#2196F3'; }}
+                              >
+                                <span>➕</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ) : (
+                          custVehicles.map((vehicle, idx) => (
+                            <tr key={vehicle.id} style={{ borderBottom: '1px solid', borderColor: COLORS.border, background: idx % 2 === 0 ? 'transparent' : COLORS.primaryLight }}>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, fontWeight: idx === 0 ? '600' : 'normal' }}>
+                                {idx === 0 ? customer.data?.name : ''}
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>
+                                {idx === 0 ? customer.data?.phone : ''}
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{vehicle.data?.make}</td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{vehicle.data?.model}</td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.primary, fontWeight: '600' }}>{vehicle.data?.license_plate}</td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <button 
+                                  onClick={() => setSelectedVehicleHistory(vehicle.id)}
+                                  style={{ ...styles.actionBtn, background: '#FF9800', border: '1px solid #FF9800', gap: 4, padding: '4px 8px', fontSize: 11 }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = '#e68900'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = '#FF9800'; }}
+                                >
+                                  <span>🔧</span>
+                                </button>
+                              </td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                {idx === 0 && (
+                                  <button 
+                                    onClick={() => setSelectedCustomerForVehicle(customer.id)}
+                                    style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', gap: 4, padding: '4px 8px', fontSize: 11 }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = '#0b7dda'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = '#2196F3'; }}
+                                  >
+                                    <span>➕</span>
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </React.Fragment>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
+      {selectedCustomerForVehicle && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: COLORS.cardBg, borderRadius: 8, padding: 24, maxWidth: 500, width: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ color: COLORS.text, marginBottom: 16, fontSize: 16, fontWeight: '700' }}>Add Vehicle to Customer</h3>
+            <AddVehicleForm 
+              customerId={selectedCustomerForVehicle}
+              onSave={() => { loadAllData(); setSelectedCustomerForVehicle(null); }}
+              onCancel={() => setSelectedCustomerForVehicle(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedVehicleHistory && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: COLORS.cardBg, borderRadius: 8, padding: 24, maxWidth: 600, width: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ color: COLORS.text, margin: 0, fontSize: 16, fontWeight: '700' }}>Work Order History</h3>
+              <button 
+                onClick={() => setSelectedVehicleHistory(null)}
+                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: COLORS.text }}
+              >
+                ✕
+              </button>
+            </div>
+            <VehicleWorkOrderHistory vehicleId={selectedVehicleHistory} workOrders={getVehicleWorkOrders(selectedVehicleHistory)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -724,6 +750,50 @@ function AddVehicleForm({ customerId, onSave, onCancel }) {
         </button>
       </div>
     </form>
+  );
+}
+
+function VehicleWorkOrderHistory({ vehicleId, workOrders }) {
+  if (!workOrders || workOrders.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', color: COLORS.textLight, padding: 32 }}>
+        No work orders found for this vehicle
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {workOrders.map(wo => {
+        const woData = wo.data || wo;
+        return (
+          <div key={wo.id} style={{ ...styles.woCard, background: COLORS.primaryLight, borderColor: COLORS.border, marginBottom: 0, display: 'block' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 10, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>WO#</div>
+                <div style={{ fontSize: 13, color: COLORS.primary, fontWeight: '700' }}>WO #{wo.id.replace('wo', '')}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>STATUS</div>
+                <div style={{ fontSize: 12, fontWeight: '600', ...getStatusStyle(woData.status), display: 'inline-block', padding: '4px 8px', borderRadius: 4 }}>
+                  {woData.status.replace('_', ' ').toUpperCase()}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>COMPLAINT/WORK</div>
+              <div style={{ fontSize: 12, color: COLORS.text }}>{woData.complaint}</div>
+            </div>
+            {woData.notes && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid', borderColor: COLORS.border }}>
+                <div style={{ fontSize: 10, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>NOTES</div>
+                <div style={{ fontSize: 12, color: COLORS.text }}>{woData.notes}</div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
