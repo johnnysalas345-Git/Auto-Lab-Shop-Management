@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Users, FileText, DollarSign, ChevronRight, Menu, X } from 'lucide-react';
+import { Wrench, Users, FileText, DollarSign, ChevronRight, Clock, LogOut } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://gvsbbpuuoxluqaiovtvx.supabase.co';
@@ -29,7 +29,6 @@ const TECH_COLORS = {
 export default function GarageDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFilter, setActiveFilter] = useState('all');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [workOrders, setWorkOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -61,13 +60,7 @@ export default function GarageDashboard() {
       return woData.opened_at === today;
     });
 
-    const grouped = {
-      unassigned: [],
-      tech1: [],
-      tech2: [],
-      tech3: [],
-      tech4: [],
-    };
+    const grouped = { unassigned: [], tech1: [], tech2: [], tech3: [], tech4: [] };
 
     todayJobs.forEach(wo => {
       const woData = wo.data || wo;
@@ -84,7 +77,6 @@ export default function GarageDashboard() {
 
   const getActiveWorkOrders = () => {
     let filtered = workOrders;
-
     if (activeFilter === 'all') {
       filtered = workOrders.filter(wo => {
         const woData = wo.data || wo;
@@ -101,7 +93,6 @@ export default function GarageDashboard() {
         return woData.status === activeFilter;
       });
     }
-
     return filtered;
   };
 
@@ -133,87 +124,94 @@ export default function GarageDashboard() {
     return (
       <div style={{ ...styles.app, background: COLORS.bg }}>
         <div style={{ ...styles.header, background: COLORS.cardBg, borderColor: COLORS.border }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-            <button 
-              onClick={() => setMenuOpen(!menuOpen)}
-              style={{ ...styles.logoBtn, color: COLORS.primary }}
-            >
-              <Wrench size={28} />
-              <div>
-                <div style={{ ...styles.logoText, color: COLORS.primary }}>Auto Lab</div>
-                <div style={{ ...styles.logoSub, color: COLORS.textLight }}>Shop</div>
-              </div>
-            </button>
+          <div style={styles.logoSection}>
+            <Wrench size={32} color={COLORS.primary} strokeWidth={1.5} />
+            <div>
+              <div style={{ ...styles.autoLabText, color: COLORS.primary }}>AUTO</div>
+              <div style={{ ...styles.labText, color: COLORS.text }}>LAB</div>
+            </div>
+            <div style={{ ...styles.shopText, color: COLORS.textLight }}>SHOP</div>
+          </div>
 
-            {menuOpen && (
-              <div style={{ ...styles.dropdownMenu, background: COLORS.cardBg, borderColor: COLORS.border }}>
-                {[
-                  { label: 'DASHBOARD', id: 'dashboard' },
-                  { label: 'JOBS & INVOICES', id: 'jobs' },
-                  { label: 'EXPENSES', id: 'expenses' },
-                  { label: 'PAYROLL', id: 'payroll' },
-                  { label: 'PENSION', id: 'pension' },
-                  { label: 'FINANCE', id: 'finance' },
-                  { label: 'IMPORT', id: 'import' },
-                  { label: 'SETTINGS', id: 'settings' },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setMenuOpen(false);
-                    }}
-                    style={{
-                      ...styles.menuItem,
-                      background: activeTab === item.id ? COLORS.primaryLight : 'transparent',
-                      color: activeTab === item.id ? COLORS.primary : COLORS.text,
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+          <div style={styles.navCenter}>
+            {[
+              { label: 'DASHBOARD', id: 'dashboard' },
+              { label: 'JOBS & INVOICES', id: 'jobs' },
+              { label: 'EXPENSES', id: 'expenses' },
+              { label: 'HOURS', id: 'hours' },
+              { label: 'PAYROLL', id: 'payroll' },
+              { label: 'PENSION', id: 'pension' },
+              { label: 'IMPORT', id: 'import' },
+              { label: 'SETTINGS', id: 'settings' },
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                style={{
+                  ...styles.navItem,
+                  color: activeTab === item.id ? COLORS.primary : COLORS.textLight,
+                  fontWeight: activeTab === item.id ? '700' : '600',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+            {isAdmin && (
+              <button 
+                onClick={() => setActiveTab('finance')}
+                style={{
+                  ...styles.navItem,
+                  ...styles.financeBtn,
+                  color: activeTab === 'finance' ? '#FFFFFF' : COLORS.text,
+                  background: activeTab === 'finance' ? COLORS.primary : '#F2A900',
+                }}
+              >
+                FINANCE
+              </button>
             )}
           </div>
 
-          {isAdmin && (
-            <div style={{ fontSize: 12, color: COLORS.textLight, fontWeight: '600' }}>
-              Admin • Johnny
+          <div style={styles.rightSection}>
+            <div style={styles.cashOnHandSection}>
+              <div style={{ ...styles.cashLabel, color: COLORS.textLight }}>ON HAND</div>
+              <div style={{ ...styles.cashAmount, color: COLORS.primary }}>CI$5,240.50</div>
             </div>
-          )}
+            <div style={styles.userSection}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
+                <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
+              </div>
+              <div style={styles.avatar}>J</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ ...styles.actionsBar, background: COLORS.cardBg, borderColor: COLORS.border }}>
+          <div style={styles.actionButtonsContainer}>
+            <button style={{ ...styles.actionBtn, background: '#6BA388' }}>
+              <Users size={18} />
+              <span>New Customer</span>
+            </button>
+            <button style={{ ...styles.actionBtn, background: COLORS.primary }}>
+              <Wrench size={18} />
+              <span>New Work Order</span>
+            </button>
+            <button style={{ ...styles.actionBtn, background: '#C08A3C' }}>
+              <FileText size={18} />
+              <span>New Estimate</span>
+            </button>
+            <button style={{ ...styles.actionBtn, background: '#8B8B8B' }}>
+              <Clock size={18} />
+              <span>Hours</span>
+            </button>
+            <button style={{ ...styles.actionBtn, background: '#7B68A6' }}>
+              <DollarSign size={18} />
+              <span>Expense</span>
+            </button>
+          </div>
         </div>
 
         <div style={{ ...styles.body, background: COLORS.bg }}>
-          <div style={styles.topSection}>
-            <div style={styles.actionsSection}>
-              <button style={{ ...styles.actionBtn, background: '#6BA388' }}>
-                <Users size={18} />
-                <span>New Customer</span>
-              </button>
-              <button style={{ ...styles.actionBtn, background: COLORS.primary }}>
-                <Wrench size={18} />
-                <span>New Work Order</span>
-              </button>
-              <button style={{ ...styles.actionBtn, background: '#C08A3C' }}>
-                <FileText size={18} />
-                <span>New Estimate</span>
-              </button>
-              <button style={{ ...styles.actionBtn, background: '#8B8B8B' }}>
-                <Clock size={18} />
-                <span>Hours</span>
-              </button>
-              <button style={{ ...styles.actionBtn, background: '#7B68A6' }}>
-                <DollarSign size={18} />
-                <span>Expense</span>
-              </button>
-            </div>
-
-            <div style={{ ...styles.cashDisplay, background: COLORS.cardBg, borderColor: COLORS.border }}>
-              <div style={{ ...styles.cashLabel, color: COLORS.textLight }}>CASH ON HAND</div>
-              <div style={{ ...styles.cashAmount, color: COLORS.primary }}>CI$5,240.50</div>
-            </div>
-          </div>
-
           <div style={styles.mainContainer}>
             <div style={{ ...styles.leftSection, background: COLORS.cardBg, borderColor: COLORS.border }}>
               <div style={{ ...styles.sectionHeader, borderColor: COLORS.border }}>
@@ -222,36 +220,11 @@ export default function GarageDashboard() {
               </div>
 
               <div style={styles.scrollableContent}>
-                <TechSchedule 
-                  techName="Technician 1" 
-                  jobs={jobsByTech.tech1} 
-                  color={TECH_COLORS.tech1}
-                  vehicles={vehicles}
-                />
-                <TechSchedule 
-                  techName="Technician 2" 
-                  jobs={jobsByTech.tech2} 
-                  color={TECH_COLORS.tech2}
-                  vehicles={vehicles}
-                />
-                <TechSchedule 
-                  techName="Technician 3" 
-                  jobs={jobsByTech.tech3} 
-                  color={TECH_COLORS.tech3}
-                  vehicles={vehicles}
-                />
-                <TechSchedule 
-                  techName="Technician 4" 
-                  jobs={jobsByTech.tech4} 
-                  color={TECH_COLORS.tech4}
-                  vehicles={vehicles}
-                />
-                <TechSchedule 
-                  techName="Unassigned" 
-                  jobs={jobsByTech.unassigned} 
-                  color={COLORS.textLighter}
-                  vehicles={vehicles}
-                />
+                <TechSchedule techName="Technician 1" jobs={jobsByTech.tech1} color={TECH_COLORS.tech1} vehicles={vehicles} />
+                <TechSchedule techName="Technician 2" jobs={jobsByTech.tech2} color={TECH_COLORS.tech2} vehicles={vehicles} />
+                <TechSchedule techName="Technician 3" jobs={jobsByTech.tech3} color={TECH_COLORS.tech3} vehicles={vehicles} />
+                <TechSchedule techName="Technician 4" jobs={jobsByTech.tech4} color={TECH_COLORS.tech4} vehicles={vehicles} />
+                <TechSchedule techName="Unassigned" jobs={jobsByTech.unassigned} color={COLORS.textLighter} vehicles={vehicles} />
               </div>
             </div>
 
@@ -327,13 +300,6 @@ export default function GarageDashboard() {
             </div>
           </div>
         </div>
-
-        {menuOpen && (
-          <div 
-            onClick={() => setMenuOpen(false)}
-            style={{ position: 'fixed', inset: 0, zIndex: 10 }}
-          />
-        )}
       </div>
     );
   }
@@ -341,47 +307,48 @@ export default function GarageDashboard() {
   return (
     <div style={{ ...styles.app, background: COLORS.bg }}>
       <div style={{ ...styles.header, background: COLORS.cardBg, borderColor: COLORS.border }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative' }}>
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{ ...styles.logoBtn, color: COLORS.primary }}
-          >
-            <Wrench size={28} />
-            <div>
-              <div style={{ ...styles.logoText, color: COLORS.primary }}>Auto Lab</div>
-              <div style={{ ...styles.logoSub, color: COLORS.textLight }}>Shop</div>
-            </div>
-          </button>
+        <div style={styles.logoSection}>
+          <Wrench size={32} color={COLORS.primary} strokeWidth={1.5} />
+          <div>
+            <div style={{ ...styles.autoLabText, color: COLORS.primary }}>AUTO</div>
+            <div style={{ ...styles.labText, color: COLORS.text }}>LAB</div>
+          </div>
+          <div style={{ ...styles.shopText, color: COLORS.textLight }}>SHOP</div>
+        </div>
 
-          {menuOpen && (
-            <div style={{ ...styles.dropdownMenu, background: COLORS.cardBg, borderColor: COLORS.border }}>
-              {[
-                { label: 'DASHBOARD', id: 'dashboard' },
-                { label: 'JOBS & INVOICES', id: 'jobs' },
-                { label: 'EXPENSES', id: 'expenses' },
-                { label: 'PAYROLL', id: 'payroll' },
-                { label: 'PENSION', id: 'pension' },
-                { label: 'FINANCE', id: 'finance' },
-                { label: 'IMPORT', id: 'import' },
-                { label: 'SETTINGS', id: 'settings' },
-              ].map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMenuOpen(false);
-                  }}
-                  style={{
-                    ...styles.menuItem,
-                    background: activeTab === item.id ? COLORS.primaryLight : 'transparent',
-                    color: activeTab === item.id ? COLORS.primary : COLORS.text,
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
+        <div style={styles.navCenter}>
+          {[
+            { label: 'DASHBOARD', id: 'dashboard' },
+            { label: 'JOBS & INVOICES', id: 'jobs' },
+            { label: 'EXPENSES', id: 'expenses' },
+            { label: 'HOURS', id: 'hours' },
+            { label: 'PAYROLL', id: 'payroll' },
+            { label: 'PENSION', id: 'pension' },
+            { label: 'IMPORT', id: 'import' },
+            { label: 'SETTINGS', id: 'settings' },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              style={{
+                ...styles.navItem,
+                color: activeTab === item.id ? COLORS.primary : COLORS.textLight,
+                fontWeight: activeTab === item.id ? '700' : '600',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={styles.rightSection}>
+          <div style={styles.userSection}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
+              <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
             </div>
-          )}
+            <div style={styles.avatar}>J</div>
+          </div>
         </div>
       </div>
       <div style={{ ...styles.body, background: COLORS.bg }}>
@@ -390,12 +357,6 @@ export default function GarageDashboard() {
           <p>Coming soon...</p>
         </div>
       </div>
-      {menuOpen && (
-        <div 
-          onClick={() => setMenuOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 10 }}
-        />
-      )}
     </div>
   );
 }
@@ -430,30 +391,28 @@ function TechSchedule({ techName, jobs, color, vehicles }) {
   );
 }
 
-function Clock(props) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10"></circle>
-      <polyline points="12 6 12 12 16 14"></polyline>
-    </svg>
-  );
-}
-
 const styles = {
   app: { minHeight: '100vh', fontFamily: "'Inter', sans-serif", display: 'flex', flexDirection: 'column' },
-  header: { padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderBottom: '1px solid' },
-  logoBtn: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'none', cursor: 'pointer', padding: 0 },
-  logoText: { fontSize: 18, fontWeight: '700' },
-  logoSub: { fontSize: 11, fontWeight: '500' },
-  dropdownMenu: { position: 'absolute', top: 60, left: 0, minWidth: 200, borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid', zIndex: 20, overflow: 'hidden' },
-  menuItem: { display: 'block', width: '100%', padding: '12px 16px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', textAlign: 'left', transition: 'all 0.2s' },
-  body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' },
-  topSection: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 24 },
-  actionsSection: { display: 'flex', gap: 12, flexWrap: 'wrap' },
+  header: { padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderBottom: '1px solid' },
+  logoSection: { display: 'flex', alignItems: 'center', gap: 12, minWidth: 180 },
+  autoLabText: { fontSize: 14, fontWeight: '700', lineHeight: 1, letterSpacing: 1 },
+  labText: { fontSize: 14, fontWeight: '700', lineHeight: 1, letterSpacing: 1 },
+  shopText: { fontSize: 14, fontWeight: '600', marginLeft: 8 },
+  navCenter: { display: 'flex', gap: 2, alignItems: 'center', flex: 1, justifyContent: 'center' },
+  navItem: { padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, transition: 'all 0.2s' },
+  financeBtn: { borderRadius: 6, padding: '8px 16px', marginLeft: 8 },
+  rightSection: { display: 'flex', alignItems: 'center', gap: 24, minWidth: 280 },
+  cashOnHandSection: { textAlign: 'right', borderRight: '1px solid #E8EEF5', paddingRight: 24 },
+  cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2 },
+  cashAmount: { fontSize: 16, fontWeight: '700' },
+  userSection: { display: 'flex', alignItems: 'center', gap: 12 },
+  userName: { fontSize: 12, fontWeight: '600' },
+  signOutBtn: { fontSize: 11, border: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
+  avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14 },
+  actionsBar: { padding: '12px 24px', borderBottom: '1px solid' },
+  actionButtonsContainer: { display: 'flex', gap: 12, maxWidth: '1600px', margin: '0 auto' },
   actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: 'white', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer' },
-  cashDisplay: { padding: '16px 24px', borderRadius: 8, border: '1px solid', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', minWidth: 220 },
-  cashLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
-  cashAmount: { fontSize: 28, fontWeight: '700' },
+  body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   mainContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, minHeight: 600 },
   leftSection: { borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', border: '1px solid' },
   rightSection: { borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', border: '1px solid' },
