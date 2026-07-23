@@ -417,6 +417,8 @@ function CustomersView() {
   const [selectedCustomerForVehicle, setSelectedCustomerForVehicle] = useState(null);
   const [selectedVehicleHistory, setSelectedVehicleHistory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingVehicle, setEditingVehicle] = useState(null);
+  const [editingCustomer, setEditingCustomer] = useState(null);
 
   useEffect(() => {
     loadAllData();
@@ -540,9 +542,9 @@ function CustomersView() {
                 <tr style={{ background: COLORS.primaryLight, borderBottom: '2px solid', borderColor: COLORS.border }}>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 200 }}>Name</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>Phone</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 120 }}>Brand</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>Model</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>License Plate</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 120 }}>Brand</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>Model</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 140 }}>License Plate</th>
                   <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 80 }}>Work Orders</th>
                   <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: 12, fontWeight: '700', color: COLORS.text, minWidth: 100 }}>Add Vehicle</th>
                 </tr>
@@ -563,9 +565,9 @@ function CustomersView() {
                           <tr style={{ borderBottom: '1px solid', borderColor: COLORS.border, background: 'transparent' }}>
                             <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{customer.data?.name}</td>
                             <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{customer.data?.phone}</td>
-                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
-                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
-                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight, textAlign: 'center' }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight, textAlign: 'center' }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight, textAlign: 'center' }}>—</td>
                             <td style={{ padding: '12px 16px', textAlign: 'center' }}>—</td>
                             <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                               <button 
@@ -581,15 +583,21 @@ function CustomersView() {
                         ) : (
                           custVehicles.map((vehicle, idx) => (
                             <tr key={vehicle.id} style={{ borderBottom: '1px solid', borderColor: COLORS.border, background: idx % 2 === 0 ? 'transparent' : COLORS.primaryLight }}>
-                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, fontWeight: idx === 0 ? '600' : 'normal' }}>
-                                {idx === 0 ? customer.data?.name : ''}
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, fontWeight: idx === 0 ? '600' : 'normal', cursor: idx === 0 ? 'pointer' : 'default' }} onClick={() => idx === 0 && setEditingCustomer(customer)}>
+                                {idx === 0 ? <span style={{ textDecoration: 'underline', color: COLORS.primary }}>{customer.data?.name}</span> : ''}
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>
-                                {idx === 0 ? customer.data?.phone : ''}
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, cursor: idx === 0 ? 'pointer' : 'default' }} onClick={() => idx === 0 && setEditingCustomer(customer)}>
+                                {idx === 0 ? <span style={{ textDecoration: 'underline', color: COLORS.primary }}>{customer.data?.phone}</span> : ''}
                               </td>
-                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{vehicle.data?.make}</td>
-                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{vehicle.data?.model}</td>
-                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.primary, fontWeight: '600' }}>{vehicle.data?.license_plate}</td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, cursor: 'pointer', textAlign: 'center' }} onClick={() => setEditingVehicle(vehicle)}>
+                                <span style={{ textDecoration: 'underline', color: COLORS.primary }}>{vehicle.data?.make}</span>
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, cursor: 'pointer', textAlign: 'center' }} onClick={() => setEditingVehicle(vehicle)}>
+                                <span style={{ textDecoration: 'underline', color: COLORS.primary }}>{vehicle.data?.model}</span>
+                              </td>
+                              <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.primary, fontWeight: '600', cursor: 'pointer', textAlign: 'center' }} onClick={() => setEditingVehicle(vehicle)}>
+                                <span style={{ textDecoration: 'underline' }}>{vehicle.data?.license_plate}</span>
+                              </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                                 <button 
                                   onClick={() => setSelectedVehicleHistory(vehicle.id)}
@@ -651,6 +659,49 @@ function CustomersView() {
               </button>
             </div>
             <VehicleWorkOrderHistory vehicleId={selectedVehicleHistory} workOrders={getVehicleWorkOrders(selectedVehicleHistory)} />
+          </div>
+        </div>
+      )}
+
+      {editingVehicle && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: COLORS.cardBg, borderRadius: 8, padding: 24, maxWidth: 600, width: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ color: COLORS.text, margin: 0, fontSize: 16, fontWeight: '700' }}>Edit Vehicle</h3>
+              <button 
+                onClick={() => setEditingVehicle(null)}
+                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: COLORS.text }}
+              >
+                ✕
+              </button>
+            </div>
+            <EditVehicleForm 
+              vehicle={editingVehicle}
+              customers={customers}
+              onSave={() => { loadAllData(); setEditingVehicle(null); }}
+              onCancel={() => setEditingVehicle(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {editingCustomer && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: COLORS.cardBg, borderRadius: 8, padding: 24, maxWidth: 600, width: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ color: COLORS.text, margin: 0, fontSize: 16, fontWeight: '700' }}>Edit Customer</h3>
+              <button 
+                onClick={() => setEditingCustomer(null)}
+                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: COLORS.text }}
+              >
+                ✕
+              </button>
+            </div>
+            <EditCustomerForm 
+              customer={editingCustomer}
+              onSave={() => { loadAllData(); setEditingCustomer(null); }}
+              onCancel={() => setEditingCustomer(null)}
+            />
           </div>
         </div>
       )}
@@ -829,6 +880,213 @@ function AddVehicleForm({ customerId, onSave, onCancel }) {
           {loading ? 'Saving...' : 'Add Vehicle'}
         </button>
         <button type="button" onClick={onCancel} disabled={loading} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', fontSize: 12, opacity: loading ? 0.6 : 1 }}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function EditVehicleForm({ vehicle, customers, onSave, onCancel }) {
+  const [formData, setFormData] = useState(vehicle.data || {});
+  const [transferCustomerId, setTransferCustomerId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setError('');
+    
+    if (!formData.make || !formData.model || !formData.license_plate) {
+      setError('Make, model, and license plate are required');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error: updateError } = await supabase.from('vehicles').update({ data: formData }).eq('id', vehicle.id);
+      if (updateError) throw new Error(updateError.message || 'Failed to update vehicle');
+      alert('Vehicle updated successfully!');
+      onSave();
+    } catch (err) {
+      console.error('Error updating vehicle:', err);
+      setError(err.message || 'Error updating vehicle');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleTransfer(e) {
+    e.preventDefault();
+    setError('');
+    
+    if (!transferCustomerId) {
+      setError('Please select a customer to transfer to');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error: updateError } = await supabase.from('vehicles').update({ customer_id: transferCustomerId }).eq('id', vehicle.id);
+      if (updateError) throw new Error(updateError.message || 'Failed to transfer vehicle');
+      alert('Vehicle transferred successfully!');
+      onSave();
+    } catch (err) {
+      console.error('Error transferring vehicle:', err);
+      setError(err.message || 'Error transferring vehicle');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <form onSubmit={handleSave} style={{ padding: '16px', marginBottom: 16, background: COLORS.primaryLight, borderRadius: 8, border: '1px solid', borderColor: COLORS.border }}>
+        {error && (
+          <div style={{ padding: '8px 12px', marginBottom: 12, background: '#FCE3E3', color: '#B87C7C', borderRadius: 4, fontSize: 12, fontWeight: '600' }}>
+            ⚠️ {error}
+          </div>
+        )}
+        <h4 style={{ color: COLORS.text, marginBottom: 12, fontSize: 14, fontWeight: '700' }}>Vehicle Details</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <input
+            type="number"
+            placeholder="Year"
+            value={formData.year || ''}
+            onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+            style={styles.formInput}
+            disabled={loading}
+          />
+          <input
+            placeholder="Make *"
+            value={formData.make || ''}
+            onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+            style={styles.formInput}
+            disabled={loading}
+          />
+        </div>
+        <input
+          placeholder="Model *"
+          value={formData.model || ''}
+          onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+          style={styles.formInput}
+          disabled={loading}
+        />
+        <input
+          placeholder="License Plate *"
+          value={formData.license_plate || ''}
+          onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
+          style={styles.formInput}
+          disabled={loading}
+        />
+        <input
+          placeholder="VIN (optional)"
+          value={formData.vin || ''}
+          onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
+          style={styles.formInput}
+          disabled={loading}
+        />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', flex: 1, justifyContent: 'center', fontSize: 12, opacity: loading ? 0.6 : 1 }}>
+            {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+          <button type="button" onClick={onCancel} disabled={loading} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', fontSize: 12, opacity: loading ? 0.6 : 1 }}>
+            Cancel
+          </button>
+        </div>
+      </form>
+
+      <form onSubmit={handleTransfer} style={{ padding: '16px', background: COLORS.primaryLight, borderRadius: 8, border: '1px solid', borderColor: COLORS.border }}>
+        <h4 style={{ color: COLORS.text, marginBottom: 12, fontSize: 14, fontWeight: '700' }}>Transfer Vehicle to Another Customer</h4>
+        <select
+          value={transferCustomerId}
+          onChange={(e) => setTransferCustomerId(e.target.value)}
+          style={{ ...styles.formInput, appearance: 'auto' }}
+          disabled={loading}
+        >
+          <option value="">-- Select Customer --</option>
+          {customers.map(cust => (
+            <option key={cust.id} value={cust.id}>
+              {cust.data?.name} ({cust.data?.phone})
+            </option>
+          ))}
+        </select>
+        <button type="submit" disabled={loading || !transferCustomerId} style={{ ...styles.actionBtn, background: '#FF9800', border: '1px solid #FF9800', width: '100%', justifyContent: 'center', fontSize: 12, opacity: loading || !transferCustomerId ? 0.6 : 1 }}>
+          {loading ? 'Transferring...' : '🚗 Transfer Vehicle'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function EditCustomerForm({ customer, onSave, onCancel }) {
+  const [formData, setFormData] = useState(customer.data || {});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setError('');
+    
+    if (!formData.name || !formData.phone) {
+      setError('Name and phone are required');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error: updateError } = await supabase.from('customers').update({ data: formData }).eq('id', customer.id);
+      if (updateError) throw new Error(updateError.message || 'Failed to update customer');
+      alert('Customer updated successfully!');
+      onSave();
+    } catch (err) {
+      console.error('Error updating customer:', err);
+      setError(err.message || 'Error updating customer');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSave} style={{ padding: '16px', background: COLORS.primaryLight, borderRadius: 8, border: '1px solid', borderColor: COLORS.border }}>
+      {error && (
+        <div style={{ padding: '8px 12px', marginBottom: 12, background: '#FCE3E3', color: '#B87C7C', borderRadius: 4, fontSize: 12, fontWeight: '600' }}>
+          ⚠️ {error}
+        </div>
+      )}
+      <input
+        placeholder="Full Name *"
+        value={formData.name || ''}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        style={styles.formInput}
+        disabled={loading}
+      />
+      <input
+        placeholder="Phone *"
+        value={formData.phone || ''}
+        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        style={styles.formInput}
+        disabled={loading}
+      />
+      <input
+        placeholder="Email"
+        value={formData.email || ''}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        style={styles.formInput}
+        disabled={loading}
+      />
+      <input
+        placeholder="Address"
+        value={formData.address || ''}
+        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+        style={styles.formInput}
+        disabled={loading}
+      />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#4CAF50', border: '1px solid #4CAF50', flex: 1, justifyContent: 'center', opacity: loading ? 0.6 : 1 }}>
+          {loading ? 'Saving...' : 'Save Changes'}
+        </button>
+        <button type="button" onClick={onCancel} disabled={loading} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', opacity: loading ? 0.6 : 1 }}>
           Cancel
         </button>
       </div>
