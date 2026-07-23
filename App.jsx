@@ -136,7 +136,7 @@ export default function GarageDashboard() {
 
     return (
       <div style={{ ...styles.app, background: COLORS.bg }}>
-        <div style={{ ...styles.header, background: COLORS.cardBg, borderColor: COLORS.border }}>
+        <div style={{ ...styles.header, background: COLORS.primaryLight, borderColor: COLORS.border }}>
           <div style={styles.menuSection}>
             <button 
               onClick={() => setMenuOpen(!menuOpen)}
@@ -184,45 +184,45 @@ export default function GarageDashboard() {
           </div>
         </div>
 
-        <div style={{ ...styles.actionsBar, background: COLORS.cardBg }}>
+        <div style={{ ...styles.actionsBar, background: COLORS.primaryLight }}>
           <div style={styles.actionBarContent}>
             <div style={styles.actionButtonsContainer}>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
-                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
-                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
+                style={{ ...styles.actionBtn, background: '#F2A900' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
                 <Users size={18} />
                 <span>Customers</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
-                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
-                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
+                style={{ ...styles.actionBtn, background: '#F2A900' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
                 <span style={{ fontSize: 18, fontWeight: 'bold' }}>⚙️</span>
                 <span>Work Orders</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
-                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
-                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
+                style={{ ...styles.actionBtn, background: '#F2A900' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
                 <FileText size={18} />
                 <span>Estimates</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
-                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
-                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
+                style={{ ...styles.actionBtn, background: '#F2A900' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
                 <Clock size={18} />
                 <span>Hours</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
-                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
-                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
+                style={{ ...styles.actionBtn, background: '#F2A900' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
                 <DollarSign size={18} />
                 <span>Expenses</span>
@@ -337,7 +337,7 @@ export default function GarageDashboard() {
 
   return (
     <div style={{ ...styles.app, background: COLORS.bg }}>
-      <div style={{ ...styles.header, background: COLORS.cardBg, borderColor: COLORS.border }}>
+      <div style={{ ...styles.header, background: COLORS.primaryLight, borderColor: COLORS.border }}>
         <div style={styles.menuSection}>
           <button 
             onClick={() => setMenuOpen(!menuOpen)}
@@ -442,7 +442,7 @@ const styles = {
   rightSection: { display: 'flex', alignItems: 'center', gap: 24 },
   cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2, color: '#333333' },
   cashAmount: { fontSize: 16, fontWeight: '700', color: '#000000' },
-  userSection: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'none', padding: 0 },
+  userSection: { display: 'flex', alignItems: 'center', gap: 12 },
   userName: { fontSize: 12, fontWeight: '600' },
   signOutBtn: { fontSize: 11, border: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
   avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14 },
