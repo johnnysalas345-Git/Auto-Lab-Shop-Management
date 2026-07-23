@@ -26,6 +26,44 @@ const TECH_COLORS = {
   tech4: '#B87C7C',
 };
 
+const CAR_MAKES = [
+  'Abarth', 'AC', 'Acura', 'Aeolus', 'Aion', 'AITO', 'Aiways', 'Aixam', 'Alfa Romeo', 'Alpina', 'Alpine',
+  'Anfini', 'Apollo', 'Appollen', 'Arcfox', 'Aria', 'Ariel', 'Aro', 'Artega', 'Asia', 'Aspark', 'Aston Martin',
+  'Astro', 'Audi', 'Aurus', 'Austin', 'Austin-Healey', 'Autobianchi', 'Avatr', 'B.Engineering', 'BAC', 'BAIC',
+  'Baltasar', 'Baltijas Dzips', 'Baojun', 'BAW', 'Bee Bee', 'BelGee', 'Bentley', 'Bertone', 'Bestune', 'Bisu',
+  'Bitter', 'Bizzarrini', 'Blonell', 'BMW', 'Bollinger', 'Bordrin', 'Borgward', 'Brabham', 'Bremach', 'Brilliance',
+  'Bristol', 'Bufori', 'Bugatti', 'Buick', 'BYD', 'Cadillac', 'Callaway', 'Campagna', 'Carbodies', 'Caterham',
+  'Cenntro', 'ChangAn', 'Changan Nevo', 'ChangFeng', 'Chery', 'Chevrolet', 'Chrysler', 'Citroen', 'Cizeta',
+  'Corbellati', 'Cupra', 'Czinger', 'Dacia', 'Dadi', 'Daewoo', 'DAF', 'Daihatsu', 'Daimler', 'Dallara', 'Dallas',
+  'Datsun', 'David Brown', 'DC', 'De Lorean', 'De Tomaso', 'Deepal', 'Denza', 'Derways', 'DeSoto', 'DFSK', 'Dodge',
+  'DongFeng', 'Doninvest', 'Donkervoort', 'DR', 'Drako', 'DS', 'e.GO', 'Eadon Green', 'Eagle', 'EBRO', 'Elaris',
+  'Elemental', 'EMC', 'Engler', 'EVO', 'Exeed', 'Fangchengbao', 'Farizon', 'FAW', 'Felino', 'Ferrari', 'Fiat',
+  'Firefly', 'Fisker', 'Fittipaldi', 'FOMM', 'Force Motors', 'Ford', 'Forthing', 'Foton', 'FSO', 'Fulwin', 'Fuqi',
+  'GAZ', 'Geely', 'Genesis', 'Geo', 'Geometry', 'GFG Style', 'Ginetta', 'Gleagle', 'GMC', 'Gordon Murray', 'Great Wall',
+  'Hafei', 'Haima', 'Haval', 'Hawtai', 'Hennessey', 'Hindustan', 'HiPhi', 'Hispano Suiza', 'Holden', 'Honda', 'Hongqi',
+  'HSV', 'HuangHai', 'Hummer', 'Hurtan', 'Hyper', 'Hyptec', 'Hyundai', 'iCAR', 'iCAUR', 'ICH-X', 'ICKX', 'IM', 'IMSA',
+  'INEOS', 'Infiniti', 'Innocenti', 'Invicta', 'Invicta Electric', 'Iran Khodro', 'Irmscher', 'Isdera', 'IsoRivolta',
+  'Isuzu', 'Italdesign', 'Iveco', 'Izh', 'JAC', 'Jaecoo', 'Jaguar', 'Jeep', 'Jetour', 'Jiangling', 'JMEV', 'JY',
+  'Kaiyi', 'Karlmann King', 'Karma', 'KGM', 'Kia', 'Kimera', 'Koenigsegg', 'KTM', 'Lada', 'Lamborghini', 'Lancia',
+  'Land Rover', 'Landwind', 'Leapmotor', 'Lepas', 'LEVC', 'Lexus', 'Li', 'Ligier', 'Lincoln', 'Lister', 'Livan',
+  'Lordstown', 'Lotus', 'LTI', 'LUAZ', 'Lucid', 'Luxeed', 'Luxgen', 'Lvchi', 'Lynk & Co', 'M-Hero', 'Maextro', 'Mahindra',
+  'Marcos', 'Maruti', 'Maserati', 'Maxus', 'Maybach', 'Mazda', 'Mazzanti', 'MCC', 'McLaren', 'Mega', 'Melkus',
+  'Mercedes-Benz', 'Mercury', 'Metrocab', 'MG', 'Micro', 'Milan', 'Minelli', 'MINEmobility', 'Mini', 'Mitsubishi',
+  'Mitsuoka', 'Moke', 'Monte Carlo', 'Morgan', 'Morris', 'Moskvich', 'Munro', 'MW Motors', 'Neta', 'NIO', 'Nissan',
+  'Noble', 'O.S.C.A.', 'Oldsmobile', 'Omoda', 'Onvo', 'Opel', 'ORA', 'Pagani', 'Panoz', 'Pariss', 'Paykan', 'Perodua',
+  'Peugeot', 'Picasso', 'Pininfarina', 'Plymouth', 'Polaris', 'Polestar', 'Pontiac', 'Porsche', 'Praga', 'Premier',
+  'Proton', 'PUCH', 'Puma', 'Puritalia', 'Qiantu', 'Qoros', 'Qvale', 'RAM', 'Ravon', 'Reliant', 'Renault',
+  'Renault Samsung', 'Riddara', 'Rimac', 'Rinspeed', 'Rivian', 'Roewe', 'Rolls-Royce', 'Ronart', 'Rover', 'Rox',
+  'RUF', 'Saab', 'SAIC', 'Saleen', 'Santana', 'Saturn', 'Sbarro', 'SCG', 'Scion', 'Scout', 'Seat', 'SeAZ', 'Seres',
+  'ShuangHuan', 'Silence', 'Sin Cars', 'Skoda', 'Skywell', 'SMA', 'Smart', 'Sono Motors', 'Sony', 'Soueast', 'Spectre',
+  'Sportequipe', 'Spyker', 'Spyros Panopoulos', 'SsangYong', 'SSC', 'Stelato', 'Subaru', 'Suda', 'Suzuki', 'SWM',
+  'TagAz', 'Talbot', 'Tank', 'Tata', 'Tatra', 'Techrules', 'Tesla', 'Tianma', 'Tianye', 'Tiger', 'Tofas', 'Togg',
+  'Tonggong', 'Toyota', 'Trabant', 'Tramontana', 'Triumph', 'Trumpchi', 'TVR', 'UAZ', 'Uniti', 'Vanderhall', 'Vauxhall',
+  'Vector', 'Vencer', 'Venturi', 'Vespa', 'VinFast', 'Volkswagen', 'Volvo', 'Voyah', 'VUHL', 'VW-Porsche', 'W Motors',
+  'Wartburg', 'Weltmeister', 'Westfield', 'WEY', 'Wiesmann', 'Xiaomi', 'Xin Kai', 'XPENG', 'Yangwang', 'Zacua', 'Zastava',
+  'ZAZ', 'Zeekr', 'Zenvo', 'Zhidou', 'ZIL', 'Zotye', 'ZX'
+];
+
 function getStatusStyle(status) {
   const statusColors = {
     open: { background: '#DFE9F8', color: '#4A90E2', fontWeight: '600' },
@@ -431,8 +469,6 @@ function CustomersView() {
         supabase.from('vehicles').select('*'),
         supabase.from('work_orders').select('*'),
       ]);
-      console.log('Customers:', custRes.data);
-      console.log('Vehicles:', vehRes.data);
       setCustomers(custRes.data || []);
       setVehicles(vehRes.data || []);
       setWorkOrders(woRes.data || []);
@@ -565,9 +601,9 @@ function CustomersView() {
                           <tr style={{ borderBottom: '1px solid', borderColor: COLORS.border, background: 'transparent' }}>
                             <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{customer.data?.name}</td>
                             <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.text }}>{customer.data?.phone}</td>
-                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight, textAlign: 'center' }}>—</td>
-                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight, textAlign: 'center' }}>—</td>
-                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight, textAlign: 'center' }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
+                            <td style={{ padding: '12px 16px', fontSize: 13, color: COLORS.textLight }}>—</td>
                             <td style={{ padding: '12px 16px', textAlign: 'center' }}>—</td>
                             <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                               <button 
@@ -725,12 +761,9 @@ function NewCustomerForm({ onSave, onCancel }) {
     
     setLoading(true);
     try {
-      console.log('Inserting customer:', formData);
       const { data, error: insertError } = await supabase.from('customers').insert([
         { data: formData }
       ]).select();
-      
-      console.log('Insert response:', { data, insertError });
       
       if (insertError) {
         throw new Error(insertError.message || 'Failed to insert customer');
@@ -809,12 +842,9 @@ function AddVehicleForm({ customerId, onSave, onCancel }) {
     
     setLoading(true);
     try {
-      console.log('Inserting vehicle:', { customer_id: customerId, data: formData });
       const { data, error: insertError } = await supabase.from('vehicles').insert([
         { customer_id: customerId, data: formData }
       ]).select();
-      
-      console.log('Insert response:', { data, insertError });
       
       if (insertError) {
         throw new Error(insertError.message || 'Failed to insert vehicle');
@@ -846,13 +876,17 @@ function AddVehicleForm({ customerId, onSave, onCancel }) {
           style={styles.formInput}
           disabled={loading}
         />
-        <input
-          placeholder="Make *"
-          value={formData.make}
+        <select
+          value={formData.make || ''}
           onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-          style={styles.formInput}
+          style={{ ...styles.formInput, appearance: 'auto' }}
           disabled={loading}
-        />
+        >
+          <option value="">-- Select Make --</option>
+          {CAR_MAKES.map(make => (
+            <option key={make} value={make}>{make}</option>
+          ))}
+        </select>
       </div>
       <input
         placeholder="Model *"
@@ -957,13 +991,17 @@ function EditVehicleForm({ vehicle, customers, onSave, onCancel }) {
             style={styles.formInput}
             disabled={loading}
           />
-          <input
-            placeholder="Make *"
+          <select
             value={formData.make || ''}
             onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-            style={styles.formInput}
+            style={{ ...styles.formInput, appearance: 'auto' }}
             disabled={loading}
-          />
+          >
+            <option value="">-- Select Make --</option>
+            {CAR_MAKES.map(make => (
+              <option key={make} value={make}>{make}</option>
+            ))}
+          </select>
         </div>
         <input
           placeholder="Model *"
