@@ -134,6 +134,10 @@ export default function GarageDashboard() {
     { label: 'FINANCE', id: 'finance' },
   ];
 
+  if (activeTab === 'customers') {
+    return <CustomersView />;
+  }
+
   if (activeTab === 'dashboard') {
     const jobsByTech = groupJobsByTech();
     const activeWOs = getActiveWorkOrders();
@@ -178,12 +182,12 @@ export default function GarageDashboard() {
           </div>
 
           <div style={styles.rightSection}>
-            <div style={styles.userSection}>
-              <div style={{ textAlign: 'right', border: 'none', outline: 'none' }}>
+            <div style={{ ...styles.userSection, boxSizing: 'border-box' }}>
+              <div style={{ textAlign: 'right', border: 'none', outline: 'none', boxSizing: 'border-box' }}>
                 <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
                 <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
               </div>
-              <div style={styles.avatar}>J</div>
+              <div style={{ ...styles.avatar, boxSizing: 'border-box' }}>J</div>
             </div>
           </div>
         </div>
@@ -192,6 +196,7 @@ export default function GarageDashboard() {
           <div style={styles.actionBarContent}>
             <div style={styles.actionButtonsContainer}>
               <button 
+                onClick={() => setActiveTab('customers')}
                 style={{ ...styles.actionBtn, background: '#F2A900' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
@@ -378,12 +383,12 @@ export default function GarageDashboard() {
         </div>
 
         <div style={styles.rightSection}>
-          <div style={styles.userSection}>
-            <div style={{ textAlign: 'right', border: 'none', outline: 'none' }}>
+          <div style={{ ...styles.userSection, boxSizing: 'border-box' }}>
+            <div style={{ textAlign: 'right', border: 'none', outline: 'none', boxSizing: 'border-box' }}>
               <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
               <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
             </div>
-            <div style={styles.avatar}>J</div>
+            <div style={{ ...styles.avatar, boxSizing: 'border-box' }}>J</div>
           </div>
         </div>
       </div>
@@ -400,6 +405,325 @@ export default function GarageDashboard() {
         />
       )}
     </div>
+  );
+}
+
+function CustomersView() {
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [showAddVehicleForm, setShowAddVehicleForm] = useState(false);
+
+  useEffect(() => {
+    loadCustomersAndVehicles();
+  }, []);
+
+  async function loadCustomersAndVehicles() {
+    try {
+      const [custRes, vehRes] = await Promise.all([
+        supabase.from('customers').select('*'),
+        supabase.from('vehicles').select('*'),
+      ]);
+      setCustomers(custRes.data || []);
+      setVehicles(vehRes.data || []);
+    } catch (err) {
+      console.error('Error loading data:', err);
+    }
+  }
+
+  const customerVehicles = selectedCustomer 
+    ? vehicles.filter(v => v.customer_id === selectedCustomer.id)
+    : [];
+
+  return (
+    <div style={{ ...styles.app, background: COLORS.bg }}>
+      <div style={{ ...styles.header, background: COLORS.primaryLight, borderColor: COLORS.border }}>
+        <div style={styles.menuSection}>
+          <button 
+            onClick={() => window.location.reload()}
+            style={styles.menuButton}
+          >
+            <div style={styles.autoLabLogo}>
+              <div style={styles.logoText}>AUTO</div>
+              <div style={{ ...styles.logoText, color: '#E53935' }}>LAB</div>
+            </div>
+            <div style={styles.menuLabel}>MENU</div>
+          </button>
+        </div>
+        <div style={styles.rightSection}>
+          <div style={{ ...styles.userSection, boxSizing: 'border-box' }}>
+            <div style={{ textAlign: 'right', border: 'none', outline: 'none', boxSizing: 'border-box' }}>
+              <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
+              <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
+            </div>
+            <div style={{ ...styles.avatar, boxSizing: 'border-box' }}>J</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ ...styles.body, background: COLORS.bg }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, minHeight: 600 }}>
+          <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ ...styles.sectionHeader, borderBottom: '1px solid', borderColor: COLORS.border, padding: '16px 24px' }}>
+              <h2 style={{ ...styles.sectionTitle, color: COLORS.text, margin: 0 }}>Customers</h2>
+              <button 
+                onClick={() => setShowNewCustomerForm(!showNewCustomerForm)}
+                style={{ ...styles.actionBtn, position: 'absolute', right: 24, background: '#4CAF50', border: '1px solid #4CAF50', gap: 4, padding: '8px 12px', fontSize: 12 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = '#45a049'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = '#4CAF50'; }}
+              >
+                <span>➕</span>
+                <span>New</span>
+              </button>
+            </div>
+
+            {showNewCustomerForm && (
+              <NewCustomerForm 
+                onSave={() => { loadCustomersAndVehicles(); setShowNewCustomerForm(false); }}
+                onCancel={() => setShowNewCustomerForm(false)}
+              />
+            )}
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+              {customers.length === 0 ? (
+                <div style={{ textAlign: 'center', color: COLORS.textLight, padding: 40 }}>No customers yet</div>
+              ) : (
+                customers.map(customer => (
+                  <div 
+                    key={customer.id}
+                    onClick={() => setSelectedCustomer(customer)}
+                    style={{
+                      ...styles.woCard,
+                      background: selectedCustomer?.id === customer.id ? COLORS.primary : COLORS.primaryLight,
+                      color: selectedCustomer?.id === customer.id ? 'white' : COLORS.text,
+                      borderColor: selectedCustomer?.id === customer.id ? COLORS.primary : COLORS.border,
+                      marginBottom: 8,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: '700', fontSize: 13 }}>{customer.data?.name}</div>
+                      <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>{customer.data?.phone}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {selectedCustomer ? (
+            <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ ...styles.sectionHeader, borderBottom: '1px solid', borderColor: COLORS.border, padding: '16px 24px' }}>
+                <h2 style={{ ...styles.sectionTitle, color: COLORS.text, margin: 0 }}>Customer Profile</h2>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+                <div style={{ marginBottom: 32, paddingBottom: 24, borderBottom: '1px solid', borderColor: COLORS.border }}>
+                  <h3 style={{ color: COLORS.text, marginBottom: 16, fontSize: 14, fontWeight: '700' }}>Personal Information</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>NAME</div>
+                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.name}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>PHONE</div>
+                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.phone}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>EMAIL</div>
+                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.email || '—'}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: COLORS.textLight, fontWeight: '600', marginBottom: 4 }}>ADDRESS</div>
+                      <div style={{ fontSize: 13, color: COLORS.text, fontWeight: '600' }}>{selectedCustomer.data?.address || '—'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ color: COLORS.text, fontSize: 14, fontWeight: '700', margin: 0 }}>Vehicles ({customerVehicles.length})</h3>
+                    <button 
+                      onClick={() => setShowAddVehicleForm(!showAddVehicleForm)}
+                      style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', gap: 4, padding: '6px 10px', fontSize: 11 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#0b7dda'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#2196F3'; }}
+                    >
+                      <span>➕</span>
+                      <span>Add Vehicle</span>
+                    </button>
+                  </div>
+
+                  {showAddVehicleForm && (
+                    <AddVehicleForm 
+                      customerId={selectedCustomer.id}
+                      onSave={() => { loadCustomersAndVehicles(); setShowAddVehicleForm(false); }}
+                      onCancel={() => setShowAddVehicleForm(false)}
+                    />
+                  )}
+
+                  {customerVehicles.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: COLORS.textLight, padding: 32, background: COLORS.primaryLight, borderRadius: 8 }}>
+                      No vehicles. Click "Add Vehicle" to add one.
+                    </div>
+                  ) : (
+                    customerVehicles.map(vehicle => (
+                      <div key={vehicle.id} style={{ ...styles.woCard, background: COLORS.primaryLight, borderColor: COLORS.border, marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: COLORS.primary, fontWeight: '700', fontSize: 13 }}>
+                            {vehicle.data?.year} {vehicle.data?.make} {vehicle.data?.model}
+                          </div>
+                          <div style={{ fontSize: 11, marginTop: 4, color: COLORS.text }}>Plate: <strong>{vehicle.data?.license_plate}</strong></div>
+                          <div style={{ fontSize: 11, marginTop: 2, color: COLORS.textLight }}>VIN: {vehicle.data?.vin || '—'}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ ...styles.section, background: COLORS.cardBg, borderColor: COLORS.border, border: '1px solid', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.textLight }}>
+              Select a customer to view details
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewCustomerForm({ onSave, onCancel }) {
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!formData.name || !formData.phone) {
+      alert('Name and phone are required');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('customers').insert([
+        { data: formData }
+      ]);
+      if (error) throw error;
+      onSave();
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error adding customer');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ padding: '16px 24px', borderBottom: '1px solid', borderColor: COLORS.border, background: COLORS.primaryLight }}>
+      <input
+        placeholder="Full Name *"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        style={styles.formInput}
+      />
+      <input
+        placeholder="Phone *"
+        value={formData.phone}
+        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        style={styles.formInput}
+      />
+      <input
+        placeholder="Email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        style={styles.formInput}
+      />
+      <input
+        placeholder="Address"
+        value={formData.address}
+        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+        style={styles.formInput}
+      />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#4CAF50', border: '1px solid #4CAF50', flex: 1, justifyContent: 'center' }}>
+          {loading ? 'Saving...' : 'Save Customer'}
+        </button>
+        <button type="button" onClick={onCancel} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center' }}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function AddVehicleForm({ customerId, onSave, onCancel }) {
+  const [formData, setFormData] = useState({ year: new Date().getFullYear(), make: '', model: '', license_plate: '', vin: '' });
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!formData.make || !formData.model || !formData.license_plate) {
+      alert('Make, model, and license plate are required');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('vehicles').insert([
+        { customer_id: customerId, data: formData }
+      ]);
+      if (error) throw error;
+      onSave();
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error adding vehicle');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ padding: '16px', marginBottom: 16, background: COLORS.primaryLight, borderRadius: 8, border: '1px solid', borderColor: COLORS.border }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <input
+          type="number"
+          placeholder="Year"
+          value={formData.year}
+          onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+          style={styles.formInput}
+        />
+        <input
+          placeholder="Make *"
+          value={formData.make}
+          onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+          style={styles.formInput}
+        />
+      </div>
+      <input
+        placeholder="Model *"
+        value={formData.model}
+        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+        style={styles.formInput}
+      />
+      <input
+        placeholder="License Plate *"
+        value={formData.license_plate}
+        onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
+        style={styles.formInput}
+      />
+      <input
+        placeholder="VIN (optional)"
+        value={formData.vin}
+        onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
+        style={styles.formInput}
+      />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', flex: 1, justifyContent: 'center', fontSize: 12 }}>
+          {loading ? 'Saving...' : 'Add Vehicle'}
+        </button>
+        <button type="button" onClick={onCancel} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', fontSize: 12 }}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -443,13 +767,13 @@ const styles = {
   menuLabel: { fontSize: 13, fontWeight: '700', color: '#666666' },
   dropdownMenu: { position: 'absolute', top: 60, left: 0, minWidth: 220, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, overflow: 'hidden' },
   menuItemStyle: { display: 'block', width: '100%', padding: '12px 16px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', textAlign: 'left', color: '#333333', transition: 'background 0.15s' },
-  rightSection: { display: 'flex', alignItems: 'center', gap: 24, border: 'none', outline: 'none', background: 'transparent', boxShadow: 'none' },
+  rightSection: { display: 'flex', alignItems: 'center', gap: 24, border: 'none', outline: 'none', background: 'transparent', boxShadow: 'none', appearance: 'none', padding: 0, margin: 0 },
   cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2, color: '#333333' },
   cashAmount: { fontSize: 16, fontWeight: '700', color: '#000000' },
-  userSection: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' },
-  userName: { fontSize: 12, fontWeight: '600', border: 'none', outline: 'none' },
-  signOutBtn: { fontSize: 11, border: 'none', outline: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
-  avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14, border: 'none', outline: 'none', boxShadow: 'none' },
+  userSection: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent', appearance: 'none', padding: 0, margin: 0 },
+  userName: { fontSize: 12, fontWeight: '600', border: 'none', outline: 'none', appearance: 'none', padding: 0, margin: 0 },
+  signOutBtn: { fontSize: 11, border: 'none', outline: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline', appearance: 'none', boxShadow: 'none', margin: 0 },
+  avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14, border: 'none', outline: 'none', boxShadow: 'none', appearance: 'none', padding: 0, margin: 0 },
   actionsBar: { padding: '12px 24px' },
   actionBarContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   actionButtonsContainer: { display: 'flex', gap: 12 },
@@ -483,4 +807,5 @@ const styles = {
   woVehicle: { fontSize: 11, marginTop: 2 },
   woStatus: { fontSize: 10, padding: '4px 8px', borderRadius: 4, marginTop: 4, display: 'inline-block' },
   emptyState: { textAlign: 'center', padding: 40 },
+  formInput: { width: '100%', padding: '10px 12px', marginBottom: 10, border: '1px solid', borderColor: COLORS.border, borderRadius: 4, fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' },
 };
