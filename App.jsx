@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Users, FileText, DollarSign, ChevronRight, Clock, LogOut } from 'lucide-react';
+import { Users, FileText, DollarSign, ChevronRight, Clock } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://gvsbbpuuoxluqaiovtvx.supabase.co';
@@ -29,6 +29,7 @@ const TECH_COLORS = {
 export default function GarageDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [workOrders, setWorkOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -117,6 +118,18 @@ export default function GarageDashboard() {
     return statusColors[status] || { background: '#F3F5F8', color: COLORS.textLight, fontWeight: '600' };
   };
 
+  const menuItems = [
+    { label: 'DASHBOARD', id: 'dashboard' },
+    { label: 'JOBS & INVOICES', id: 'jobs' },
+    { label: 'EXPENSES', id: 'expenses' },
+    { label: 'HOURS', id: 'hours' },
+    { label: 'PAYROLL', id: 'payroll' },
+    { label: 'PENSION', id: 'pension' },
+    { label: 'IMPORT', id: 'import' },
+    { label: 'SETTINGS', id: 'settings' },
+    { label: 'FINANCE', id: 'finance' },
+  ];
+
   if (activeTab === 'dashboard') {
     const jobsByTech = groupJobsByTech();
     const activeWOs = getActiveWorkOrders();
@@ -124,58 +137,41 @@ export default function GarageDashboard() {
     return (
       <div style={{ ...styles.app, background: COLORS.bg }}>
         <div style={{ ...styles.header, background: COLORS.cardBg, borderColor: COLORS.border }}>
-          <div style={styles.logoSection}>
-            <Wrench size={32} color={COLORS.primary} strokeWidth={1.5} />
-            <div>
-              <div style={{ ...styles.autoLabText, color: COLORS.primary }}>AUTO</div>
-              <div style={{ ...styles.labText, color: COLORS.text }}>LAB</div>
-            </div>
-            <div style={{ ...styles.shopText, color: COLORS.textLight }}>SHOP</div>
-          </div>
+          <div style={styles.menuSection}>
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={styles.menuButton}
+              title="Open Menu"
+            >
+              <div style={styles.autoLabLogo}>
+                <div style={styles.logoText}>AUTO</div>
+                <div style={{ ...styles.logoText, color: '#E53935' }}>LAB</div>
+              </div>
+              <div style={styles.menuLabel}>MENU</div>
+            </button>
 
-          <div style={styles.navCenter}>
-            {[
-              { label: 'DASHBOARD', id: 'dashboard' },
-              { label: 'JOBS & INVOICES', id: 'jobs' },
-              { label: 'EXPENSES', id: 'expenses' },
-              { label: 'HOURS', id: 'hours' },
-              { label: 'PAYROLL', id: 'payroll' },
-              { label: 'PENSION', id: 'pension' },
-              { label: 'IMPORT', id: 'import' },
-              { label: 'SETTINGS', id: 'settings' },
-            ].map(item => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                style={{
-                  ...styles.navItem,
-                  color: activeTab === item.id ? COLORS.primary : COLORS.textLight,
-                  fontWeight: activeTab === item.id ? '700' : '600',
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-            {isAdmin && (
-              <button 
-                onClick={() => setActiveTab('finance')}
-                style={{
-                  ...styles.navItem,
-                  ...styles.financeBtn,
-                  color: activeTab === 'finance' ? '#FFFFFF' : COLORS.text,
-                  background: activeTab === 'finance' ? COLORS.primary : '#F2A900',
-                }}
-              >
-                FINANCE
-              </button>
+            {menuOpen && (
+              <div style={{ ...styles.dropdownMenu, background: '#F0F0F0' }}>
+                {menuItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMenuOpen(false);
+                    }}
+                    style={{
+                      ...styles.menuItemStyle,
+                      background: activeTab === item.id ? '#E0E0E0' : 'transparent',
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
           <div style={styles.rightSection}>
-            <div style={styles.cashOnHandSection}>
-              <div style={{ ...styles.cashLabel, color: COLORS.textLight }}>ON HAND</div>
-              <div style={{ ...styles.cashAmount, color: COLORS.primary }}>CI$5,240.50</div>
-            </div>
             <div style={styles.userSection}>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
@@ -187,27 +183,53 @@ export default function GarageDashboard() {
         </div>
 
         <div style={{ ...styles.actionsBar, background: COLORS.cardBg, borderColor: COLORS.border }}>
-          <div style={styles.actionButtonsContainer}>
-            <button style={{ ...styles.actionBtn, background: '#6BA388' }}>
-              <Users size={18} />
-              <span>New Customer</span>
-            </button>
-            <button style={{ ...styles.actionBtn, background: COLORS.primary }}>
-              <Wrench size={18} />
-              <span>New Work Order</span>
-            </button>
-            <button style={{ ...styles.actionBtn, background: '#C08A3C' }}>
-              <FileText size={18} />
-              <span>New Estimate</span>
-            </button>
-            <button style={{ ...styles.actionBtn, background: '#8B8B8B' }}>
-              <Clock size={18} />
-              <span>Hours</span>
-            </button>
-            <button style={{ ...styles.actionBtn, background: '#7B68A6' }}>
-              <DollarSign size={18} />
-              <span>Expense</span>
-            </button>
+          <div style={styles.actionBarContent}>
+            <div style={styles.actionButtonsContainer}>
+              <button 
+                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
+                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
+                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+              >
+                <Users size={18} />
+                <span>New Customer</span>
+              </button>
+              <button 
+                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
+                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
+                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+              >
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>⚙️</span>
+                <span>New Work Order</span>
+              </button>
+              <button 
+                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
+                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
+                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+              >
+                <FileText size={18} />
+                <span>New Estimate</span>
+              </button>
+              <button 
+                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
+                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
+                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+              >
+                <Clock size={18} />
+                <span>Hours</span>
+              </button>
+              <button 
+                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
+                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
+                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+              >
+                <DollarSign size={18} />
+                <span>Expense</span>
+              </button>
+            </div>
+            <div style={styles.cashOnHandDisplay}>
+              <div style={{ ...styles.cashLabel, color: COLORS.textLight }}>ON HAND</div>
+              <div style={{ ...styles.cashAmount, color: COLORS.primary }}>CI$5,240.50</div>
+            </div>
           </div>
         </div>
 
@@ -300,6 +322,13 @@ export default function GarageDashboard() {
             </div>
           </div>
         </div>
+
+        {menuOpen && (
+          <div 
+            onClick={() => setMenuOpen(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 10 }}
+          />
+        )}
       </div>
     );
   }
@@ -307,38 +336,37 @@ export default function GarageDashboard() {
   return (
     <div style={{ ...styles.app, background: COLORS.bg }}>
       <div style={{ ...styles.header, background: COLORS.cardBg, borderColor: COLORS.border }}>
-        <div style={styles.logoSection}>
-          <Wrench size={32} color={COLORS.primary} strokeWidth={1.5} />
-          <div>
-            <div style={{ ...styles.autoLabText, color: COLORS.primary }}>AUTO</div>
-            <div style={{ ...styles.labText, color: COLORS.text }}>LAB</div>
-          </div>
-          <div style={{ ...styles.shopText, color: COLORS.textLight }}>SHOP</div>
-        </div>
+        <div style={styles.menuSection}>
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={styles.menuButton}
+          >
+            <div style={styles.autoLabLogo}>
+              <div style={styles.logoText}>AUTO</div>
+              <div style={{ ...styles.logoText, color: '#E53935' }}>LAB</div>
+            </div>
+            <div style={styles.menuLabel}>MENU</div>
+          </button>
 
-        <div style={styles.navCenter}>
-          {[
-            { label: 'DASHBOARD', id: 'dashboard' },
-            { label: 'JOBS & INVOICES', id: 'jobs' },
-            { label: 'EXPENSES', id: 'expenses' },
-            { label: 'HOURS', id: 'hours' },
-            { label: 'PAYROLL', id: 'payroll' },
-            { label: 'PENSION', id: 'pension' },
-            { label: 'IMPORT', id: 'import' },
-            { label: 'SETTINGS', id: 'settings' },
-          ].map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                ...styles.navItem,
-                color: activeTab === item.id ? COLORS.primary : COLORS.textLight,
-                fontWeight: activeTab === item.id ? '700' : '600',
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
+          {menuOpen && (
+            <div style={{ ...styles.dropdownMenu, background: '#F0F0F0' }}>
+              {menuItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMenuOpen(false);
+                  }}
+                  style={{
+                    ...styles.menuItemStyle,
+                    background: activeTab === item.id ? '#E0E0E0' : 'transparent',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={styles.rightSection}>
@@ -357,6 +385,12 @@ export default function GarageDashboard() {
           <p>Coming soon...</p>
         </div>
       </div>
+      {menuOpen && (
+        <div 
+          onClick={() => setMenuOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 10 }}
+        />
+      )}
     </div>
   );
 }
@@ -393,16 +427,15 @@ function TechSchedule({ techName, jobs, color, vehicles }) {
 
 const styles = {
   app: { minHeight: '100vh', fontFamily: "'Inter', sans-serif", display: 'flex', flexDirection: 'column' },
-  header: { padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderBottom: '1px solid' },
-  logoSection: { display: 'flex', alignItems: 'center', gap: 12, minWidth: 180 },
-  autoLabText: { fontSize: 14, fontWeight: '700', lineHeight: 1, letterSpacing: 1 },
-  labText: { fontSize: 14, fontWeight: '700', lineHeight: 1, letterSpacing: 1 },
-  shopText: { fontSize: 14, fontWeight: '600', marginLeft: 8 },
-  navCenter: { display: 'flex', gap: 2, alignItems: 'center', flex: 1, justifyContent: 'center' },
-  navItem: { padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 12, transition: 'all 0.2s' },
-  financeBtn: { borderRadius: 6, padding: '8px 16px', marginLeft: 8 },
-  rightSection: { display: 'flex', alignItems: 'center', gap: 24, minWidth: 280 },
-  cashOnHandSection: { textAlign: 'right', borderRight: '1px solid #E8EEF5', paddingRight: 24 },
+  header: { padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', borderBottom: '1px solid' },
+  menuSection: { position: 'relative' },
+  menuButton: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', padding: 0 },
+  autoLabLogo: { display: 'flex', gap: 0, alignItems: 'baseline' },
+  logoText: { fontSize: 16, fontWeight: '900', color: '#333333', letterSpacing: -1 },
+  menuLabel: { fontSize: 11, fontWeight: '700', color: '#666666' },
+  dropdownMenu: { position: 'absolute', top: 60, left: 0, minWidth: 220, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, overflow: 'hidden' },
+  menuItemStyle: { display: 'block', width: '100%', padding: '12px 16px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', textAlign: 'left', color: '#333333', transition: 'background 0.15s' },
+  rightSection: { display: 'flex', alignItems: 'center', gap: 24 },
   cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2 },
   cashAmount: { fontSize: 16, fontWeight: '700' },
   userSection: { display: 'flex', alignItems: 'center', gap: 12 },
@@ -410,8 +443,10 @@ const styles = {
   signOutBtn: { fontSize: 11, border: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
   avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14 },
   actionsBar: { padding: '12px 24px', borderBottom: '1px solid' },
-  actionButtonsContainer: { display: 'flex', gap: 12, maxWidth: '1600px', margin: '0 auto' },
-  actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: 'white', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer' },
+  actionBarContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1600px', margin: '0 auto', width: '100%' },
+  actionButtonsContainer: { display: 'flex', gap: 12 },
+  actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: '#333333', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer', background: '#F0F0F0', transition: 'all 0.2s' },
+  cashOnHandDisplay: { textAlign: 'right' },
   body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   mainContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, minHeight: 600 },
   leftSection: { borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', border: '1px solid' },
