@@ -11,7 +11,7 @@ const COLORS = {
   primary: '#4A90E2',
   primaryLight: '#E3F0FF',
   primaryDark: '#2E5CB8',
-  bg: '#F8FAFB',
+  bg: '#E3F0FF',
   cardBg: '#FFFFFF',
   border: '#E8EEF5',
   text: '#2C3E50',
@@ -161,8 +161,10 @@ export default function GarageDashboard() {
                     }}
                     style={{
                       ...styles.menuItemStyle,
-                      background: activeTab === item.id ? '#E0E0E0' : 'transparent',
+                      background: activeTab === item.id ? '#D0D0D0' : 'transparent',
                     }}
+                    onMouseEnter={(e) => e.target.style.background = '#D0D0D0'}
+                    onMouseLeave={(e) => e.target.style.background = activeTab === item.id ? '#D0D0D0' : 'transparent'}
                   >
                     {item.label}
                   </button>
@@ -186,44 +188,44 @@ export default function GarageDashboard() {
           <div style={styles.actionBarContent}>
             <div style={styles.actionButtonsContainer}>
               <button 
-                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
-                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
-                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
+                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
               >
                 <Users size={18} />
-                <span>New Customer</span>
+                <span>Customers</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
-                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
-                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
+                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
               >
                 <span style={{ fontSize: 18, fontWeight: 'bold' }}>⚙️</span>
-                <span>New Work Order</span>
+                <span>Work Orders</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
-                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
-                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
+                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
               >
                 <FileText size={18} />
-                <span>New Estimate</span>
+                <span>Estimates</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
-                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
-                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
+                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
               >
                 <Clock size={18} />
                 <span>Hours</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F0F0F0', color: '#333333' }}
-                onMouseEnter={(e) => e.target.style.background = '#F2A900'}
-                onMouseLeave={(e) => e.target.style.background = '#F0F0F0'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
+                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
               >
                 <DollarSign size={18} />
-                <span>Expense</span>
+                <span>Expenses</span>
               </button>
             </div>
             <div style={styles.cashOnHandDisplay}>
@@ -359,8 +361,10 @@ export default function GarageDashboard() {
                   }}
                   style={{
                     ...styles.menuItemStyle,
-                    background: activeTab === item.id ? '#E0E0E0' : 'transparent',
+                    background: activeTab === item.id ? '#D0D0D0' : 'transparent',
                   }}
+                  onMouseEnter={(e) => e.target.style.background = '#D0D0D0'}
+                  onMouseLeave={(e) => e.target.style.background = activeTab === item.id ? '#D0D0D0' : 'transparent'}
                 >
                   {item.label}
                 </button>
@@ -445,7 +449,7 @@ const styles = {
   actionsBar: { padding: '12px 24px', borderBottom: '1px solid' },
   actionBarContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   actionButtonsContainer: { display: 'flex', gap: 12 },
-  actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: '#333333', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer', background: '#F0F0F0', transition: 'all 0.2s' },
+  actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer', background: '#F2A900', transition: 'all 0.2s' },
   cashOnHandDisplay: { textAlign: 'right' },
   body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   mainContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, minHeight: 600 },
