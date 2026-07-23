@@ -175,7 +175,7 @@ export default function GarageDashboard() {
 
           <div style={styles.rightSection}>
             <div style={styles.userSection}>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', border: 'none', outline: 'none' }}>
                 <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
                 <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
               </div>
@@ -239,7 +239,7 @@ export default function GarageDashboard() {
           <div style={styles.mainContainer}>
             <div style={{ ...styles.leftSection, background: COLORS.cardBg, borderColor: COLORS.border }}>
               <div style={{ ...styles.sectionHeader, borderColor: COLORS.border }}>
-                <h2 style={{ ...styles.sectionTitle, color: COLORS.text }}>Today's Schedule</h2>
+                <h2 style={{ ...styles.sectionTitle, color: COLORS.text }}>Todays Workflow</h2>
                 <button style={{ ...styles.calendarBtn, background: COLORS.primaryLight, color: COLORS.primary }}>📅 Calendar</button>
               </div>
 
@@ -254,7 +254,7 @@ export default function GarageDashboard() {
 
             <div style={{ ...styles.rightSection, background: COLORS.cardBg, borderColor: COLORS.border }}>
               <div style={{ ...styles.sectionHeader, borderColor: COLORS.border }}>
-                <h2 style={{ ...styles.sectionTitle, color: COLORS.text }}>Active Work Orders</h2>
+                <h2 style={{ ...styles.sectionTitle, color: COLORS.text }}>Job Status</h2>
               </div>
 
               <div style={{ ...styles.filterTabs, borderColor: COLORS.border }}>
@@ -375,7 +375,7 @@ export default function GarageDashboard() {
 
         <div style={styles.rightSection}>
           <div style={styles.userSection}>
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: 'right', border: 'none', outline: 'none' }}>
               <div style={{ ...styles.userName, color: COLORS.text }}>Johnny</div>
               <button style={{ ...styles.signOutBtn, color: COLORS.textLight }}>Sign out</button>
             </div>
@@ -442,10 +442,10 @@ const styles = {
   rightSection: { display: 'flex', alignItems: 'center', gap: 24 },
   cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2, color: '#333333' },
   cashAmount: { fontSize: 16, fontWeight: '700', color: '#000000' },
-  userSection: { display: 'flex', alignItems: 'center', gap: 12 },
-  userName: { fontSize: 12, fontWeight: '600' },
-  signOutBtn: { fontSize: 11, border: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
-  avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14 },
+  userSection: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', outline: 'none' },
+  userName: { fontSize: 12, fontWeight: '600', border: 'none', outline: 'none' },
+  signOutBtn: { fontSize: 11, border: 'none', outline: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
+  avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14, border: 'none', outline: 'none' },
   actionsBar: { padding: '12px 24px' },
   actionBarContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   actionButtonsContainer: { display: 'flex', gap: 12 },
@@ -455,9 +455,9 @@ const styles = {
   mainContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, minHeight: 600 },
   leftSection: { borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', border: '1px solid' },
   rightSection: { borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', border: '1px solid' },
-  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid' },
+  sectionHeader: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid', position: 'relative' },
   sectionTitle: { fontSize: 18, fontWeight: '700' },
-  calendarBtn: { borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 14, fontWeight: '600', border: 'none' },
+  calendarBtn: { borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 14, fontWeight: '600', border: 'none', position: 'absolute', right: 24 },
   filterTabs: { display: 'flex', gap: 8, padding: '12px 24px', borderBottom: '1px solid', flexWrap: 'wrap' },
   filterTab: { padding: '8px 16px', border: '1px solid', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: '600' },
   scrollableContent: { flex: 1, overflowY: 'auto', padding: '12px 24px' },
