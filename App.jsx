@@ -288,7 +288,7 @@ export default function GarageDashboard() {
 
               <div style={styles.scrollableContent}>
                 {activeWOs.length === 0 ? (
-                  <div style={{ ...styles.emptyState, color: COLORS.textLight }}>No active work orders</div>\
+                  <div style={{ ...styles.emptyState, color: COLORS.textLight }}>No active work orders</div>
                 ) : (
                   activeWOs.map(wo => {
                     const { woData, cust, veh } = getJobInfo(wo);
