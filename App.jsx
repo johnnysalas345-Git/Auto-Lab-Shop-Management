@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, FileText, DollarSign, ChevronRight, Clock } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://gvsbbpuuoxluqaiovtvx.supabase.co';
@@ -88,6 +88,11 @@ export default function GarageDashboard() {
         const woData = wo.data || wo;
         return ['pending_pay', 'partial'].includes(woData.status);
       });
+    } else if (activeFilter === 'contacted') {
+      filtered = workOrders.filter(wo => {
+        const woData = wo.data || wo;
+        return woData.status === 'contacted';
+      });
     } else {
       filtered = workOrders.filter(wo => {
         const woData = wo.data || wo;
@@ -121,7 +126,6 @@ export default function GarageDashboard() {
   const menuItems = [
     { label: 'DASHBOARD', id: 'dashboard' },
     { label: 'JOBS & INVOICES', id: 'jobs' },
-    { label: 'EXPENSES', id: 'expenses' },
     { label: 'HOURS', id: 'hours' },
     { label: 'PAYROLL', id: 'payroll' },
     { label: 'PENSION', id: 'pension' },
@@ -192,7 +196,7 @@ export default function GarageDashboard() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
-                <Users size={18} />
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>👥</span>
                 <span>Customers</span>
               </button>
               <button 
@@ -208,7 +212,7 @@ export default function GarageDashboard() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
-                <FileText size={18} />
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>📋</span>
                 <span>Estimates</span>
               </button>
               <button 
@@ -216,7 +220,7 @@ export default function GarageDashboard() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
-                <Clock size={18} />
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>⏰</span>
                 <span>Hours</span>
               </button>
               <button 
@@ -224,7 +228,7 @@ export default function GarageDashboard() {
                 onMouseEnter={(e) => { e.currentTarget.style.background = '#FFD84D'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
-                <DollarSign size={18} />
+                <span style={{ fontSize: 18, fontWeight: 'bold' }}>💰</span>
                 <span>Expenses</span>
               </button>
             </div>
@@ -260,10 +264,9 @@ export default function GarageDashboard() {
               <div style={{ ...styles.filterTabs, borderColor: COLORS.border }}>
                 {[
                   { label: 'All', id: 'all' },
-                  { label: 'Open', id: 'open' },
                   { label: 'In Progress', id: 'in_progress' },
                   { label: 'Waiting Parts', id: 'waiting_parts' },
-                  { label: 'Estimates', id: 'estimate' },
+                  { label: 'Contacted', id: 'contacted' },
                   { label: 'Pending to Pay', id: 'pending_pay' },
                   { label: 'Completed', id: 'completed' },
                 ].map(tab => (
@@ -274,6 +277,7 @@ export default function GarageDashboard() {
                       background: activeFilter === tab.id ? COLORS.primary : 'transparent',
                       color: activeFilter === tab.id ? 'white' : COLORS.text,
                       borderColor: activeFilter === tab.id ? COLORS.primary : COLORS.border,
+                      whiteSpace: 'nowrap',
                     }}
                     onClick={() => setActiveFilter(tab.id)}
                   >
@@ -284,7 +288,7 @@ export default function GarageDashboard() {
 
               <div style={styles.scrollableContent}>
                 {activeWOs.length === 0 ? (
-                  <div style={{ ...styles.emptyState, color: COLORS.textLight }}>No active work orders</div>
+                  <div style={{ ...styles.emptyState, color: COLORS.textLight }}>No active work orders</div>\
                 ) : (
                   activeWOs.map(wo => {
                     const { woData, cust, veh } = getJobInfo(wo);
@@ -439,7 +443,7 @@ const styles = {
   menuLabel: { fontSize: 13, fontWeight: '700', color: '#666666' },
   dropdownMenu: { position: 'absolute', top: 60, left: 0, minWidth: 220, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, overflow: 'hidden' },
   menuItemStyle: { display: 'block', width: '100%', padding: '12px 16px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', textAlign: 'left', color: '#333333', transition: 'background 0.15s' },
-  rightSection: { display: 'flex', alignItems: 'center', gap: 24 },
+  rightSection: { display: 'flex', alignItems: 'center', gap: 24, border: 'none', outline: 'none', background: 'transparent' },
   cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2, color: '#333333' },
   cashAmount: { fontSize: 16, fontWeight: '700', color: '#000000' },
   userSection: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', outline: 'none' },
@@ -458,8 +462,8 @@ const styles = {
   sectionHeader: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid', position: 'relative' },
   sectionTitle: { fontSize: 18, fontWeight: '700' },
   calendarBtn: { borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 14, fontWeight: '600', border: 'none', position: 'absolute', right: 24 },
-  filterTabs: { display: 'flex', gap: 8, padding: '12px 24px', borderBottom: '1px solid', flexWrap: 'wrap' },
-  filterTab: { padding: '8px 16px', border: '1px solid', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: '600' },
+  filterTabs: { display: 'flex', gap: 6, padding: '12px 24px', borderBottom: '1px solid', flexWrap: 'wrap', alignItems: 'center' },
+  filterTab: { padding: '8px 12px', border: '1px solid', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: '600', whiteSpace: 'nowrap' },
   scrollableContent: { flex: 1, overflowY: 'auto', padding: '12px 24px' },
   section: { borderRadius: 8, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
   techSection: { border: '1px solid', borderRadius: 8, overflow: 'hidden', borderLeft: '4px solid', marginBottom: 12 },
