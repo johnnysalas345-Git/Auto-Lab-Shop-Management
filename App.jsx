@@ -202,7 +202,7 @@ export default function GarageDashboard() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = '#F2A900'; }}
               >
                 <span style={{ fontSize: 18, fontWeight: 'bold' }}>👥</span>
-                <span>Customers</span>
+                <span>Customers & Vehicles</span>
               </button>
               <button 
                 style={{ ...styles.actionBtn, background: '#F2A900' }}
@@ -416,6 +416,7 @@ function CustomersView() {
   const [showAddVehicleForm, setShowAddVehicleForm] = useState(false);
   const [selectedCustomerForVehicle, setSelectedCustomerForVehicle] = useState(null);
   const [selectedVehicleHistory, setSelectedVehicleHistory] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadAllData();
@@ -428,6 +429,8 @@ function CustomersView() {
         supabase.from('vehicles').select('*'),
         supabase.from('work_orders').select('*'),
       ]);
+      console.log('Customers:', custRes.data);
+      console.log('Vehicles:', vehRes.data);
       setCustomers(custRes.data || []);
       setVehicles(vehRes.data || []);
       setWorkOrders(woRes.data || []);
@@ -446,6 +449,24 @@ function CustomersView() {
   const customerVehicleMap = {};
   customers.forEach(cust => {
     customerVehicleMap[cust.id] = vehicles.filter(v => v.customer_id === cust.id);
+  });
+
+  const filteredCustomers = customers.filter(cust => {
+    const custName = cust.data?.name || '';
+    const custPhone = cust.data?.phone || '';
+    const search = searchTerm.toLowerCase();
+    
+    if (custName.toLowerCase().includes(search) || custPhone.includes(search)) {
+      return true;
+    }
+    
+    const custVehicles = customerVehicleMap[cust.id] || [];
+    return custVehicles.some(v => {
+      const make = v.data?.make || '';
+      const model = v.data?.model || '';
+      const plate = v.data?.license_plate || '';
+      return make.toLowerCase().includes(search) || model.toLowerCase().includes(search) || plate.includes(search);
+    });
   });
 
   return (
@@ -477,7 +498,22 @@ function CustomersView() {
       <div style={{ ...styles.body, background: COLORS.bg }}>
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ color: COLORS.text, margin: 0, fontSize: 20, fontWeight: '700' }}>Customers & Vehicles</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="🔍 Search by name, phone, vehicle..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ 
+                padding: '8px 12px', 
+                borderRadius: 6, 
+                border: '1px solid', 
+                borderColor: COLORS.border, 
+                fontSize: 12,
+                minWidth: 240,
+                boxSizing: 'border-box'
+              }}
+            />
             <button 
               onClick={() => setShowNewCustomerForm(!showNewCustomerForm)}
               style={{ ...styles.actionBtn, background: '#4CAF50', border: '1px solid #4CAF50', gap: 4, padding: '8px 12px', fontSize: 12 }}
@@ -512,12 +548,14 @@ function CustomersView() {
                 </tr>
               </thead>
               <tbody>
-                {customers.length === 0 ? (
+                {filteredCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan="7" style={{ padding: 40, textAlign: 'center', color: COLORS.textLight }}>No customers yet</td>
+                    <td colSpan="7" style={{ padding: 40, textAlign: 'center', color: COLORS.textLight }}>
+                      {searchTerm ? 'No results found' : 'No customers yet'}
+                    </td>
                   </tr>
                 ) : (
-                  customers.map(customer => {
+                  filteredCustomers.map(customer => {
                     const custVehicles = customerVehicleMap[customer.id] || [];
                     return (
                       <React.Fragment key={customer.id}>
@@ -623,58 +661,80 @@ function CustomersView() {
 function NewCustomerForm({ onSave, onCancel }) {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', address: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setError('');
+    
     if (!formData.name || !formData.phone) {
-      alert('Name and phone are required');
+      setError('Name and phone are required');
       return;
     }
+    
     setLoading(true);
     try {
-      const { error } = await supabase.from('customers').insert([
+      console.log('Inserting customer:', formData);
+      const { data, error: insertError } = await supabase.from('customers').insert([
         { data: formData }
-      ]);
-      if (error) throw error;
+      ]).select();
+      
+      console.log('Insert response:', { data, insertError });
+      
+      if (insertError) {
+        throw new Error(insertError.message || 'Failed to insert customer');
+      }
+      
+      alert('Customer added successfully!');
       onSave();
     } catch (err) {
-      console.error('Error:', err);
-      alert('Error adding customer');
+      console.error('Error adding customer:', err);
+      setError(err.message || 'Error adding customer');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: '16px 24px', borderBottom: '1px solid', borderColor: COLORS.border, background: COLORS.primaryLight }}>
+      {error && (
+        <div style={{ padding: '8px 12px', marginBottom: 12, background: '#FCE3E3', color: '#B87C7C', borderRadius: 4, fontSize: 12, fontWeight: '600' }}>
+          ⚠️ {error}
+        </div>
+      )}
       <input
         placeholder="Full Name *"
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <input
         placeholder="Phone *"
         value={formData.phone}
         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <input
         placeholder="Email"
         value={formData.email}
         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <input
         placeholder="Address"
         value={formData.address}
         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#4CAF50', border: '1px solid #4CAF50', flex: 1, justifyContent: 'center' }}>
+        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#4CAF50', border: '1px solid #4CAF50', flex: 1, justifyContent: 'center', opacity: loading ? 0.6 : 1 }}>
           {loading ? 'Saving...' : 'Save Customer'}
         </button>
-        <button type="button" onClick={onCancel} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center' }}>
+        <button type="button" onClick={onCancel} disabled={loading} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', opacity: loading ? 0.6 : 1 }}>
           Cancel
         </button>
       </div>
@@ -685,29 +745,47 @@ function NewCustomerForm({ onSave, onCancel }) {
 function AddVehicleForm({ customerId, onSave, onCancel }) {
   const [formData, setFormData] = useState({ year: new Date().getFullYear(), make: '', model: '', license_plate: '', vin: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setError('');
+    
     if (!formData.make || !formData.model || !formData.license_plate) {
-      alert('Make, model, and license plate are required');
+      setError('Make, model, and license plate are required');
       return;
     }
+    
     setLoading(true);
     try {
-      const { error } = await supabase.from('vehicles').insert([
+      console.log('Inserting vehicle:', { customer_id: customerId, data: formData });
+      const { data, error: insertError } = await supabase.from('vehicles').insert([
         { customer_id: customerId, data: formData }
-      ]);
-      if (error) throw error;
+      ]).select();
+      
+      console.log('Insert response:', { data, insertError });
+      
+      if (insertError) {
+        throw new Error(insertError.message || 'Failed to insert vehicle');
+      }
+      
+      alert('Vehicle added successfully!');
       onSave();
     } catch (err) {
-      console.error('Error:', err);
-      alert('Error adding vehicle');
+      console.error('Error adding vehicle:', err);
+      setError(err.message || 'Error adding vehicle');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: '16px', marginBottom: 16, background: COLORS.primaryLight, borderRadius: 8, border: '1px solid', borderColor: COLORS.border }}>
+      {error && (
+        <div style={{ padding: '8px 12px', marginBottom: 12, background: '#FCE3E3', color: '#B87C7C', borderRadius: 4, fontSize: 12, fontWeight: '600' }}>
+          ⚠️ {error}
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <input
           type="number"
@@ -715,12 +793,14 @@ function AddVehicleForm({ customerId, onSave, onCancel }) {
           value={formData.year}
           onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
           style={styles.formInput}
+          disabled={loading}
         />
         <input
           placeholder="Make *"
           value={formData.make}
           onChange={(e) => setFormData({ ...formData, make: e.target.value })}
           style={styles.formInput}
+          disabled={loading}
         />
       </div>
       <input
@@ -728,24 +808,27 @@ function AddVehicleForm({ customerId, onSave, onCancel }) {
         value={formData.model}
         onChange={(e) => setFormData({ ...formData, model: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <input
         placeholder="License Plate *"
         value={formData.license_plate}
         onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <input
         placeholder="VIN (optional)"
         value={formData.vin}
         onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
         style={styles.formInput}
+        disabled={loading}
       />
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', flex: 1, justifyContent: 'center', fontSize: 12 }}>
+        <button type="submit" disabled={loading} style={{ ...styles.actionBtn, background: '#2196F3', border: '1px solid #2196F3', flex: 1, justifyContent: 'center', fontSize: 12, opacity: loading ? 0.6 : 1 }}>
           {loading ? 'Saving...' : 'Add Vehicle'}
         </button>
-        <button type="button" onClick={onCancel} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', fontSize: 12 }}>
+        <button type="button" onClick={onCancel} disabled={loading} style={{ ...styles.actionBtn, background: '#f44336', border: '1px solid #f44336', flex: 1, justifyContent: 'center', fontSize: 12, opacity: loading ? 0.6 : 1 }}>
           Cancel
         </button>
       </div>
