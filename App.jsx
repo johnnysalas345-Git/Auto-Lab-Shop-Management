@@ -184,53 +184,53 @@ export default function GarageDashboard() {
           </div>
         </div>
 
-        <div style={{ ...styles.actionsBar, background: COLORS.cardBg, borderColor: COLORS.border }}>
+        <div style={{ ...styles.actionsBar, background: COLORS.cardBg }}>
           <div style={styles.actionBarContent}>
             <div style={styles.actionButtonsContainer}>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
-                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
-                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
+                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
+                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
               >
                 <Users size={18} />
                 <span>Customers</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
-                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
-                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
+                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
+                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
               >
                 <span style={{ fontSize: 18, fontWeight: 'bold' }}>⚙️</span>
                 <span>Work Orders</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
-                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
-                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
+                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
+                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
               >
                 <FileText size={18} />
                 <span>Estimates</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
-                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
-                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
+                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
+                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
               >
                 <Clock size={18} />
                 <span>Hours</span>
               </button>
               <button 
-                style={{ ...styles.actionBtn, background: '#F2A900', color: '#FFFFFF' }}
-                onMouseEnter={(e) => e.target.style.background = '#FFFFFF'}
-                onMouseLeave={(e) => e.target.style.background = '#F2A900'}
+                style={{ ...styles.actionBtn, background: '#F2A900', color: '#000000', border: '1px solid #000000' }}
+                onMouseEnter={(e) => { e.target.style.background = '#FFD84D'; e.target.style.color = '#000000'; }}
+                onMouseLeave={(e) => { e.target.style.background = '#F2A900'; e.target.style.color = '#000000'; }}
               >
                 <DollarSign size={18} />
                 <span>Expenses</span>
               </button>
             </div>
             <div style={styles.cashOnHandDisplay}>
-              <div style={{ ...styles.cashLabel, color: COLORS.textLight }}>ON HAND</div>
-              <div style={{ ...styles.cashAmount, color: COLORS.primary }}>CI$5,240.50</div>
+              <div style={{ ...styles.cashLabel }}>ON HAND</div>
+              <div style={{ ...styles.cashAmount }}>CI$5,240.50</div>
             </div>
           </div>
         </div>
@@ -435,22 +435,22 @@ const styles = {
   menuSection: { position: 'relative' },
   menuButton: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', padding: 0 },
   autoLabLogo: { display: 'flex', gap: 0, alignItems: 'baseline' },
-  logoText: { fontSize: 16, fontWeight: '900', color: '#333333', letterSpacing: -1 },
-  menuLabel: { fontSize: 11, fontWeight: '700', color: '#666666' },
+  logoText: { fontSize: 20, fontWeight: '900', color: '#333333', letterSpacing: -1 },
+  menuLabel: { fontSize: 13, fontWeight: '700', color: '#666666' },
   dropdownMenu: { position: 'absolute', top: 60, left: 0, minWidth: 220, borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, overflow: 'hidden' },
   menuItemStyle: { display: 'block', width: '100%', padding: '12px 16px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: '600', textAlign: 'left', color: '#333333', transition: 'background 0.15s' },
   rightSection: { display: 'flex', alignItems: 'center', gap: 24 },
-  cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2 },
-  cashAmount: { fontSize: 16, fontWeight: '700' },
-  userSection: { display: 'flex', alignItems: 'center', gap: 12 },
+  cashLabel: { fontSize: 10, fontWeight: '600', textTransform: 'uppercase', marginBottom: 2, color: '#333333' },
+  cashAmount: { fontSize: 16, fontWeight: '700', color: '#000000' },
+  userSection: { display: 'flex', alignItems: 'center', gap: 12, border: 'none', background: 'none', padding: 0 },
   userName: { fontSize: 12, fontWeight: '600' },
   signOutBtn: { fontSize: 11, border: 'none', background: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' },
   avatar: { width: 36, height: 36, borderRadius: '50%', background: COLORS.primary, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: 14 },
-  actionsBar: { padding: '12px 24px', borderBottom: '1px solid' },
+  actionsBar: { padding: '12px 24px' },
   actionBarContent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   actionButtonsContainer: { display: 'flex', gap: 12 },
-  actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: '#FFFFFF', border: 'none', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer', background: '#F2A900', transition: 'all 0.2s' },
-  cashOnHandDisplay: { textAlign: 'right' },
+  actionBtn: { display: 'flex', alignItems: 'center', gap: 8, color: '#000000', border: '1px solid #000000', borderRadius: 6, padding: '10px 18px', fontWeight: '600', fontSize: 13, cursor: 'pointer', background: '#F2A900', transition: 'all 0.2s' },
+  cashOnHandDisplay: { textAlign: 'right', border: '1px solid #333333', padding: '8px 12px', borderRadius: 4, background: '#F0F0F0' },
   body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '1600px', margin: '0 auto', width: '100%' },
   mainContainer: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, flex: 1, minHeight: 600 },
   leftSection: { borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', border: '1px solid' },
