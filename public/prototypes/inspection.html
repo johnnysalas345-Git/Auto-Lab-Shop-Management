@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto Lab – Technician Inspection (prototype)</title>
+<style>
+:root{--g:#1f9d55;--y:#e6a700;--r:#d64545;--gl:#e4f5ea;--yl:#fff4d1;--rl:#fbe4e4;--ink:#1c2430;--mut:#6b7684;--line:#dfe4ea;--bg:#eef1f4;--card:#fff;--brand:#0f3b66}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+header{background:var(--brand);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:16px;flex:none}
+header h1{margin:0;font-size:16px;white-space:nowrap}
+header .veh{font-size:12px;opacity:.85}
+header .grow{flex:1;min-width:80px}
+.prog{flex:1;max-width:260px}
+.bar{height:6px;background:rgba(255,255,255,.25);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:#7ee2a1;transition:width .2s}
+.cnt{font-size:11px;margin-top:3px;opacity:.9}
+.fld{display:flex;flex-direction:column;font-size:10px;opacity:.95;gap:1px}
+.fld input{height:28px;border:0;border-radius:6px;padding:0 6px;font:inherit;font-size:13px;width:130px;color:var(--ink)}
+.man{display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap}
+.sw{position:relative;width:44px;height:26px;background:#7f93a8;border-radius:13px;border:0;transition:.2s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:#4fc17f}.sw.on::after{left:21px}
+main{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:8px 10px}
+.col{display:flex;flex-direction:column;min-height:0;gap:3px}
+.col section{display:flex;flex-direction:column;gap:3px;min-height:0}
+.col section.fill{flex:1}
+h2{margin:4px 2px 0;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);flex:none}
+.row{flex:1;min-height:0;background:var(--card);border-radius:9px;padding:2px 8px;display:flex;align-items:center;gap:8px;border-left:6px solid var(--line)}
+.row.g{border-left-color:var(--g)}.row.y{border-left-color:var(--y)}.row.r{border-left-color:var(--r)}
+.nm{flex:1;min-width:0}
+.name{font-weight:600;font-size:14px;line-height:1.15}
+.prev{font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.tog{display:flex;gap:4px;flex:none}
+.tog button{width:32px;height:32px;border-radius:50%;border:2px solid;font-size:15px;font-weight:800;padding:0;line-height:1}
+.tog .bg{border-color:var(--g);background:var(--gl);color:var(--g)}
+.tog .by{border-color:var(--y);background:var(--yl);color:#b88400}
+.tog .br{border-color:var(--r);background:var(--rl);color:var(--r)}
+.tog .bg.sel{background:var(--g);color:#fff}
+.tog .by.sel{background:var(--y);color:#fff}
+.tog .br.sel{background:var(--r);color:#fff}
+.tog.dim button:not(.sel){opacity:.4}
+.ib{width:32px;height:32px;flex:none;border-radius:8px;border:2px solid var(--line);background:#fff center/cover no-repeat;font-size:15px;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.ib.has{border-color:var(--brand);background-color:#e6eef7}
+.cam.has{color:transparent}
+.ib.need{border-color:var(--r);background-color:var(--rl);animation:p 1.4s infinite}
+@keyframes p{50%{box-shadow:0 0 0 3px rgba(214,69,69,.25)}}
+.ib b{position:absolute;top:-6px;right:-6px;background:var(--brand);color:#fff;border-radius:9px;font-size:10px;min-width:16px;height:16px;line-height:16px;text-align:center}
+#nm-modal textarea{width:100%;height:120px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:16px;resize:none}
+.pick{flex:1;padding:16px 8px;border-radius:12px;border:2px solid var(--brand);color:var(--brand);font-weight:600;font-size:15px;text-align:center;cursor:pointer}
+.phs{display:flex;flex-wrap:wrap;gap:8px}.phs div{position:relative}.phs img{width:88px;height:88px;object-fit:cover;border-radius:8px;display:block}
+.phs button{position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;border:0;background:#333;color:#fff;font-size:14px;padding:0}
+.btns{display:flex;gap:8px;margin-top:12px}.btns button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:15px}
+.btns .pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+footer{flex:none;background:#fff;border-top:1px solid var(--line);padding:7px 12px;display:flex;gap:10px;align-items:center}
+footer .sum{flex:1;font-size:13px;display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-left:8px}
+.sum .lg{margin-left:auto;font-size:11px;color:var(--mut)}
+.fin{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:10px 26px;font-size:15px;font-weight:600}
+.fin:disabled{opacity:.4}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+.modal.show{display:flex}
+.sheet{background:#fff;width:min(640px,100%);max-height:88vh;overflow:auto;border-radius:16px;padding:18px}
+.sheet h3{margin:0 0 8px}
+.item{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.item .t{font-weight:600}
+.tag{display:inline-block;padding:1px 8px;border-radius:9px;color:#fff;font-size:12px;margin-right:6px}
+.close{margin-top:14px;width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:15px}
+/* phones: fall back to a scrolling single column */
+@media (max-width:760px){
+  body{overflow:auto;height:auto}
+  main{display:block}
+  .col,.col section{display:block}
+  .row{margin-bottom:5px;min-height:54px}
+  header{flex-wrap:wrap;gap:6px 12px}
+  footer{position:sticky;bottom:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Inspection · WO #A-1042</h1>
+  <div class="veh">2016 Toyota Hilux · Plate 123456 · 84,200 km</div>
+  <div class="grow"></div>
+  <label class="fld">Technician<input type="text" id="tname" placeholder="Name"></label>
+  <label class="fld">Tech #<input type="text" id="tnum" placeholder="No." style="width:64px"></label>
+  <label class="fld">Date<input type="date" id="tdate"></label>
+  <div class="prog"><div class="bar"><i id="bar"></i></div><div class="cnt" id="done">0 of 0 checked</div></div>
+</header>
+
+<main id="list">
+  <div class="col" id="c1"></div>
+  <div class="col" id="c2"></div>
+  <div class="col" id="c3"></div>
+</main>
+
+<footer>
+  <div class="sum"><span class="dot" style="background:var(--g);margin-left:0"></span><b id="cg">0</b><span class="dot" style="background:var(--y)"></span><b id="cy">0</b><span class="dot" style="background:var(--r)"></span><b id="cr">0</b>
+  <span class="lg">✓ good · ! attention soon · ✕ repair now · 📝 note · 📷 photo · no prices shown</span></div>
+  <button class="fin" id="fin" disabled>Finish</button>
+</footer>
+
+<div class="modal" id="nm-modal"><div class="sheet" style="width:min(520px,100%)"><h3 id="nm-title"></h3><textarea id="nm-text" placeholder="Describe what you see…"></textarea><div class="btns"><button id="nm-cancel">Cancel</button><button class="pri" id="nm-save">Save</button></div></div></div>
+<div class="modal" id="ph-modal"><div class="sheet" style="width:min(520px,100%)"><h3 id="ph-title"></h3>
+<div class="btns" style="margin:0 0 12px"><label class="pick">📷 Take photo<input type="file" accept="image/*" capture="environment" id="ph-cam" hidden></label><label class="pick">🖼️ Choose from files<input type="file" accept="image/*" multiple id="ph-file" hidden></label></div>
+<div class="phs" id="ph-list"></div><button class="close" id="ph-done">Done</button></div></div>
+<div class="modal" id="modal"><div class="sheet"><h3>Inspection summary</h3><div id="sumbody"></div><button class="close" id="close">Back to inspection</button></div></div>
+
+<script>
+// [title, items, column, manualOnly]
+const GROUPS=[
+ ["Under the hood",["Engine oil level & condition","Coolant level","Brake fluid","Power steering fluid","Transmission fluid","Washer fluid","Battery & terminals","Drive belts","Hoses","Air filter"],"c1"],
+ ["Lights & wipers",["Headlights","Brake & tail lights","Turn signals & hazards","Wiper blades"],"c2"],
+ ["Cabin",["Warning lights","Horn","A/C & heater"],"c2"],
+ ["Tires & brakes",["Tire wear & condition","Front brake pads & rotors","Rear brake pads & rotors"],"c2"],
+ ["Suspension & steering",["Shocks / struts","Control arms","Sway bars","Ball joints","Steering & tie rods"],"c3"],
+ ["Underneath",["Exhaust system","Drive shaft & joints","Differential","Fluid leaks"],"c3"],
+ ["Clutch (manual cars only – skip if automatic)",["Clutch operation","Clutch fluid"],"c3",true]
+];
+const S={},names={};
+GROUPS.forEach((G,gi)=>{
+  const sec=document.createElement('section'); sec.className='fill';
+  sec.style.flex=G[1].length; // rows share height in proportion to item count
+  sec.innerHTML='<h2>'+G[0]+'</h2>';
+  G[1].forEach((name,i)=>{
+    const k=gi+'-'+i; S[k]={v:null,t:'',p:[],manual:!!G[3]}; names[k]=name;
+    const r=document.createElement('div'); r.className='row'; r.id='r'+k;
+    r.innerHTML=`<div class="nm"><div class="name">${name}</div><div class="prev" hidden></div></div>
+      <div class="tog"><button class="bg" data-v="g" aria-label="Good">✓</button><button class="by" data-v="y" aria-label="Attention soon">!</button><button class="br" data-v="r" aria-label="Repair now">✕</button></div>
+      <button class="ib note" title="Notes">📝</button>
+      <button class="ib cam" title="Photos">📷<b hidden>0</b></button>`;
+    r.querySelectorAll('.tog button').forEach(b=>b.onclick=()=>{S[k].v=S[k].v===b.dataset.v?null:b.dataset.v;draw()});
+    r.querySelector('.note').onclick=()=>openNote(k);
+    r.querySelector('.cam').onclick=()=>openPhoto(k);
+    sec.appendChild(r);
+  });
+  document.getElementById(G[2]).appendChild(sec);
+});
+const req=()=>Object.keys(S).filter(k=>!S[k].manual);
+const active=()=>Object.keys(S).filter(k=>!S[k].manual||S[k].v);
+function draw(){
+  let d=0,c={g:0,y:0,r:0};
+  Object.keys(S).forEach(k=>{
+    const s=S[k],r=document.getElementById('r'+k);
+    r.className='row '+(s.v||'');
+    r.querySelector('.tog').classList.toggle('dim',!!s.v);
+    r.querySelectorAll('.tog button').forEach(b=>b.classList.toggle('sel',b.dataset.v===s.v));
+    const cam=r.querySelector('.cam');
+    cam.classList.toggle('need',(s.v==='r'||s.v==='y')&&!s.p.length);
+    const nb=r.querySelector('.note');nb.classList.toggle('has',!!s.t);nb.classList.toggle('need',(s.v==='r'||s.v==='y')&&!s.t);
+    const pv=r.querySelector('.prev');pv.hidden=!s.t;pv.textContent=s.t;
+    cam.classList.toggle('has',!!s.p.length);
+    cam.style.backgroundImage=s.p.length?`url(${s.p[s.p.length-1]})`:'';
+    const bd=cam.querySelector('b'); bd.hidden=!s.p.length; bd.textContent=s.p.length;
+  });
+  const act=req();
+  active().forEach(k=>{if(S[k].v)c[S[k].v]++});
+  act.forEach(k=>{if(S[k].v)d++});
+  document.getElementById('bar').style.width=(act.length?d/act.length*100:0)+'%';
+  document.getElementById('done').textContent=d+' of '+act.length+' checked';
+  cg.textContent=c.g;cy.textContent=c.y;cr.textContent=c.r;
+  fin.disabled=d<act.length;
+}
+let cur=null,curP=null;
+function renderPh(){const l=document.getElementById('ph-list');l.innerHTML=S[curP].p.length?S[curP].p.map((u,i)=>`<div><img src="${u}"><button data-i="${i}">×</button></div>`).join(''):'<span style="color:var(--mut);font-size:13px">No photos yet</span>';l.querySelectorAll('button').forEach(b=>b.onclick=()=>{S[curP].p.splice(+b.dataset.i,1);renderPh();draw()})}
+function openPhoto(k){curP=k;document.getElementById('ph-title').textContent='Photos · '+names[k];renderPh();document.getElementById('ph-modal').classList.add('show')}
+['ph-cam','ph-file'].forEach(id=>document.getElementById(id).onchange=e=>{[...e.target.files].forEach(f=>S[curP].p.push(URL.createObjectURL(f)));e.target.value='';renderPh();draw()});
+document.getElementById('ph-done').onclick=()=>document.getElementById('ph-modal').classList.remove('show');
+
+function openNote(k){cur=k;document.getElementById('nm-title').textContent=names[k];const t=document.getElementById('nm-text');t.value=S[k].t;document.getElementById('nm-modal').classList.add('show');setTimeout(()=>t.focus(),50)}
+document.getElementById('nm-cancel').onclick=()=>document.getElementById('nm-modal').classList.remove('show');
+document.getElementById('nm-save').onclick=()=>{S[cur].t=document.getElementById('nm-text').value.trim();document.getElementById('nm-modal').classList.remove('show');draw()};
+fin.onclick=()=>{
+  const L={g:'Good',y:'Attention soon',r:'Repair now'},C={g:'var(--g)',y:'var(--y)',r:'var(--r)'};
+  let h=`<p style="margin:0 0 6px;font-size:13px"><b>${tname.value||'—'}</b> · Tech #${tnum.value||'—'} · ${tdate.value}</p>`;['r','y'].forEach(v=>active().filter(k=>S[k].v===v).forEach(k=>{
+    h+=`<div class="item"><span class="tag" style="background:${C[v]}">${L[v]}</span><span class="t">${names[k]}</span><div>${S[k].t?S[k].t.replace(/</g,'&lt;'):'<i>No description</i>'}</div><div>${S[k].p.length} photo(s)</div></div>`}));
+  h+=`<div class="item"><span class="tag" style="background:var(--g)">Good</span>${active().filter(k=>S[k].v==='g').length} items OK</div>`;
+  h+=`<p style="font-size:13px;color:var(--mut)">Next: the office chooses which photos the customer sees and sends them by WhatsApp. (Not connected in this prototype.)</p>`;
+  sumbody.innerHTML=h;modal.classList.add('show');
+};
+document.getElementById('close').onclick=()=>document.getElementById('modal').classList.remove('show');
+tdate.value=new Date().toISOString().slice(0,10);
+draw();
+</script>
+</body>
+</html>
